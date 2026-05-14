@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ChevronLeft, ChevronRight, MoveLeft } from "lucide-react";
 import { TransitionLink } from "@/components/transition-link";
 import { usePageTransition } from "@/components/transition-provider";
 import { Button } from "@/components/ui/button";
 
-const projects = [
+const projects: {
+    id: number;
+    title: string;
+    year: string;
+    category: string;
+    description: string;
+    tech: string[];
+    image: string;
+    content?: ReactNode;
+}[] = [
     {
         id: 1,
         title: "Horizon",
@@ -17,6 +26,22 @@ const projects = [
             "A full-stack SaaS dashboard built with Next.js and Postgres. Real-time analytics, team management, and custom reporting pipelines.",
         tech: ["Next.js", "TypeScript", "Postgres", "Tailwind"],
         image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80",
+        content: (
+            <div className="mt-10 space-y-10">
+                <div className="grid grid-cols-2 gap-3">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80" alt="Dashboard overview" className="w-full rounded-lg object-cover aspect-video" />
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80" alt="Analytics view" className="w-full rounded-lg object-cover aspect-video" />
+                </div>
+                <div>
+                    <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                    <ul className="space-y-2 text-white/55 text-sm font-light">
+                        <li>— Reduced report generation time by 70% with server-side streaming</li>
+                        <li>— Built a real-time presence system for 500+ concurrent users</li>
+                        <li>— Designed a role-based permission model supporting 12 access levels</li>
+                    </ul>
+                </div>
+            </div>
+        ),
     },
     {
         id: 2,
@@ -27,6 +52,26 @@ const projects = [
             "A nature-tracking mobile app with AI species identification. Built with React Native and a custom ML pipeline for image recognition.",
         tech: ["React Native", "Python", "TensorFlow", "AWS"],
         image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80",
+        content: (
+            <div className="mt-10 space-y-10">
+                <div className="grid grid-cols-3 gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&q=80" alt="App screen 1" className="w-full rounded-lg object-cover aspect-9/16" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80" alt="App screen 2" className="w-full rounded-lg object-cover aspect-9/16" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="https://images.unsplash.com/photo-1504006833117-8886a355efbf?w=400&q=80" alt="App screen 3" className="w-full rounded-lg object-cover aspect-9/16" />
+                </div>
+                <div>
+                    <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                    <ul className="space-y-2 text-white/55 text-sm font-light">
+                        <li>— 94% species identification accuracy across 8,000 plant & animal classes</li>
+                        <li>— Offline-first architecture — works deep in the wilderness</li>
+                        <li>— Featured in App Store&apos;s &quot;Apps We Love&quot; collection</li>
+                    </ul>
+                </div>
+            </div>
+        ),
     },
     {
         id: 3,
@@ -37,6 +82,19 @@ const projects = [
             "A minimal component library and design system used across 5 production apps. 60+ components, fully accessible, dark-mode first.",
         tech: ["React", "Storybook", "Radix UI", "SCSS"],
         image: "https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=1200&q=80",
+        content: (
+            <div className="mt-10 space-y-10">
+                <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?w=1200&q=80" alt="Component overview" className="w-full rounded-lg object-cover" style={{ maxHeight: 280 }} />
+                <div>
+                    <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                    <ul className="space-y-2 text-white/55 text-sm font-light">
+                        <li>— 60+ components with full Radix UI accessibility primitives</li>
+                        <li>— Zero-runtime CSS-in-JS — ships pure CSS custom properties</li>
+                        <li>— Adopted by 3 external teams within 6 months of open-sourcing</li>
+                    </ul>
+                </div>
+            </div>
+        ),
     },
     {
         id: 4,
@@ -47,6 +105,19 @@ const projects = [
             "An open-source edge proxy built in Go. Sub-millisecond routing, plugin system, and a web-based control plane.",
         tech: ["Go", "Docker", "Redis", "gRPC"],
         image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80",
+        content: (
+            <div className="mt-10 space-y-10">
+                <img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&q=80" alt="Infrastructure diagram" className="w-full rounded-lg object-cover" style={{ maxHeight: 280 }} />
+                <div>
+                    <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                    <ul className="space-y-2 text-white/55 text-sm font-light">
+                        <li>— &lt;0.3ms p99 routing latency under 10k req/s load</li>
+                        <li>— Plugin system with hot-reload — no downtime on config changes</li>
+                        <li>— 1.2k GitHub stars in first two months</li>
+                    </ul>
+                </div>
+            </div>
+        ),
     },
     {
         id: 5,
@@ -57,6 +128,22 @@ const projects = [
             "A mental wellness app with mood tracking and guided meditations. 10k+ active users within first month of launch.",
         tech: ["Flutter", "Firebase", "Node.js", "OpenAI"],
         image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+        content: (
+            <div className="mt-10 space-y-10">
+                <div className="grid grid-cols-2 gap-3">
+                    <img src="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80" alt="Meditation screen" className="w-full rounded-lg object-cover aspect-video" />
+                    <img src="https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80" alt="Mood tracking" className="w-full rounded-lg object-cover aspect-video" />
+                </div>
+                <div>
+                    <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                    <ul className="space-y-2 text-white/55 text-sm font-light">
+                        <li>— 10k+ active users acquired organically in the first month</li>
+                        <li>— AI-generated meditation scripts tailored to daily mood input</li>
+                        <li>— 4.8★ rating across 2,000+ reviews on both app stores</li>
+                    </ul>
+                </div>
+            </div>
+        ),
     },
 ];
 
@@ -79,6 +166,7 @@ export default function Projects() {
     const titleRef = useRef<HTMLHeadingElement>(null);
     const expandedImgRef = useRef<HTMLDivElement>(null);
     const detailRef = useRef<HTMLDivElement>(null);
+    const scrollWrapperRef = useRef<HTMLDivElement>(null);
     // Fixed-position heroes — sit above overlay stacking context so they're always visible
     const heroImgRef = useRef<HTMLDivElement>(null);   // clips from full-screen → slot
     const heroTitleRef = useRef<HTMLDivElement>(null);   // flies from list → h1
@@ -154,11 +242,12 @@ export default function Projects() {
         if (isAnimatingNavRef.current) return;
         isAnimatingNavRef.current = true;
         const xOut = direction === "next" ? -80 : 80;
-        gsap.to(titleRef.current, { x: xOut, opacity: 0, duration: 0.25, ease: "power2.in" });
-        gsap.to(expandedImgRef.current, { x: xOut * 0.3, opacity: 0, duration: 0.3, ease: "power2.in" });
+        gsap.to(titleRef.current, { x: xOut, y: 0, opacity: 0, duration: 0.25, ease: "power2.in" });
+        gsap.to(expandedImgRef.current, { x: xOut * 0.3, y: 0, opacity: 0, duration: 0.3, ease: "power2.in" });
         gsap.to(detailRef.current, { opacity: 0, duration: 0.2 });
         gsap.to(navRef.current, { opacity: 0, duration: 0.2 });
         gsap.delayedCall(0.32, () => {
+            if (scrollWrapperRef.current) scrollWrapperRef.current.scrollTop = 0;
             pendingNavRef.current = { direction };
             setActiveId(newId);
         });
@@ -238,6 +327,7 @@ export default function Projects() {
 
         gsap.to(detailRef.current, { opacity: 0, duration: 0.15 });
         gsap.to(navRef.current, { opacity: 0, duration: 0.15 });
+        if (scrollWrapperRef.current) scrollWrapperRef.current.scrollTop = 0;
         isAnimatingNavRef.current = false;
         gsap.to(overlayRef.current, { opacity: 0, duration: 0.4, delay: 0.5 });
         gsap.to(listRef.current, { opacity: 1, y: 0, duration: 0.4, delay: 0.6, ease: "power2.out" });
@@ -253,10 +343,35 @@ export default function Projects() {
     }
 
     function open(id: number) {
+        if (scrollWrapperRef.current) scrollWrapperRef.current.scrollTop = 0;
+        gsap.set(titleRef.current, { y: 0 });
+        gsap.set(expandedImgRef.current, { y: 0 });
         setActiveId(id);
         setIsExpanded(true);
         gsap.to(listRef.current, { opacity: 0, y: 8, duration: 0.2 });
     }
+
+    // ── parallax on title + image while column scrolls ────────
+    useEffect(() => {
+        if (!isExpanded) return;
+        const wrapper = scrollWrapperRef.current;
+        const title = titleRef.current;
+        const img = expandedImgRef.current;
+        if (!wrapper) return;
+        const setTitleY = gsap.quickSetter(title, "y", "px");
+        const setImgY = gsap.quickSetter(img, "y", "px");
+        const onScroll = () => {
+            const s = wrapper.scrollTop;
+            setTitleY(-s * 0.3);
+            setImgY(-s * 0.15);
+        };
+        wrapper.addEventListener("scroll", onScroll, { passive: true });
+        return () => {
+            wrapper.removeEventListener("scroll", onScroll);
+            gsap.set(title, { y: 0 });
+            gsap.set(img, { y: 0 });
+        };
+    }, [isExpanded]);
 
     // ── scroll to navigate ───────────────────────────────────
     useEffect(() => {
@@ -523,21 +638,23 @@ export default function Projects() {
                     )}
                 </div>
 
-                {/* No overflow on this wrapper — avoids clipping GSAP-transformed children */}
-                <div className="relative z-10 flex flex-col h-full px-10 sm:px-16 pt-14 pb-6">
-
+                {/* Scrollable column — whole content scrolls as one unit */}
+                <div
+                    ref={scrollWrapperRef}
+                    className="relative z-10 h-full overflow-y-auto px-10 sm:px-16 pt-14 pb-32"
+                >
                     <h1
                         ref={titleRef}
-                        className="text-white font-light mb-6 leading-none shrink-0"
+                        className="text-white font-light mb-6 leading-none"
                         style={{ fontSize: TITLE_FONT }}
                     >
                         {activeProject?.title}
                     </h1>
 
-                    {/* Full-width image — object-cover fills the slot */}
+                    {/* Full-width image */}
                     <div
                         ref={expandedImgRef}
-                        className="w-full shrink-0 overflow-hidden rounded-xl"
+                        className="w-full overflow-hidden rounded-xl"
                         style={{ height: "48vh" }}
                     >
                         {activeProject && (
@@ -550,8 +667,8 @@ export default function Projects() {
                         )}
                     </div>
 
-                    {/* Detail: only this section scrolls */}
-                    <div ref={detailRef} className="mt-7 flex-1 overflow-y-auto opacity-0 pr-1">
+                    {/* Detail — scrolls with the column, no internal scroll */}
+                    <div ref={detailRef} className="relative z-10 mt-7 opacity-0">
                         <div className="flex gap-8 mb-4 text-white/35 text-sm">
                             <span>{activeProject?.category}</span>
                             <span>{activeProject?.year}</span>
@@ -566,6 +683,7 @@ export default function Projects() {
                                 </span>
                             ))}
                         </div>
+                        {activeProject?.content}
                     </div>
                 </div>
             </div>
