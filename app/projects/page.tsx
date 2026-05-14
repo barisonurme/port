@@ -380,6 +380,24 @@ export default function Projects() {
         };
     }, [isExpanded]);
 
+    // ── smooth scroll inside expanded view ──────────────────
+    useEffect(() => {
+        if (!isExpanded) return;
+        const wrapper = scrollWrapperRef.current;
+        if (!wrapper) return;
+
+        let target = wrapper.scrollTop;
+
+        const onWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            target = Math.max(0, Math.min(target + e.deltaY, wrapper.scrollHeight - wrapper.clientHeight));
+            gsap.to(wrapper, { scrollTop: target, duration: 0.75, ease: "power3.out", overwrite: true });
+        };
+
+        wrapper.addEventListener("wheel", onWheel, { passive: false });
+        return () => wrapper.removeEventListener("wheel", onWheel);
+    }, [isExpanded]);
+
     // ── scroll to navigate ───────────────────────────────────
     useEffect(() => {
         const onWheel = (e: WheelEvent) => {
