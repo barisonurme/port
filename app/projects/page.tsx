@@ -156,10 +156,20 @@ export default function Projects() {
             gsap.set(heroImgRef.current, {
                 display: "block",
                 opacity: 1,
-                clipPath: `inset(${r.top}px ${window.innerWidth - r.right}px ${window.innerHeight - r.bottom}px ${r.left}px round 12px)`,
+                top: r.top,
+                left: r.left,
+                right: "auto",
+                bottom: "auto",
+                width: r.width,
+                height: r.height,
+                borderRadius: 12,
             });
             gsap.to(heroImgRef.current, {
-                clipPath: "inset(0px 0px 0px 0px round 0px)",
+                top: 0,
+                left: 0,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                borderRadius: 0,
                 duration: 0.65,
                 ease: "expo.inOut",
                 onComplete: () => {
@@ -247,18 +257,28 @@ export default function Projects() {
             gsap.fromTo(h1El, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" });
         }
 
-        // Hero image: clip-path shrinks from full-screen to the image slot
+        // Hero image: shrinks from full-screen to the image slot
         if (expandedImgRef.current && heroImgRef.current) {
             const r = expandedImgRef.current.getBoundingClientRect();
             gsap.set(heroImgRef.current, {
                 display: "block",
                 opacity: 1,
-                clipPath: "inset(0px 0px 0px 0px round 0px)",
+                top: 0,
+                left: 0,
+                right: "auto",
+                bottom: "auto",
+                width: window.innerWidth,
+                height: window.innerHeight,
+                borderRadius: 0,
             });
             gsap.set(expandedImgRef.current, { opacity: 0 });
 
             gsap.to(heroImgRef.current, {
-                clipPath: `inset(${r.top}px ${window.innerWidth - r.right}px ${window.innerHeight - r.bottom}px ${r.left}px round 12px)`,
+                top: r.top,
+                left: r.left,
+                width: r.width,
+                height: r.height,
+                borderRadius: 12,
                 duration: 0.8,
                 ease: "expo.inOut",
                 onComplete: () => {
@@ -351,7 +371,7 @@ export default function Projects() {
             {/* ── Hero: clip-path image ─────────────────────── */}
             <div
                 ref={heroImgRef}
-                className="fixed inset-0 pointer-events-none overflow-hidden"
+                className="fixed pointer-events-none overflow-hidden"
                 style={{ zIndex: 40, display: "none" }}
             >
                 {activeProject && (
