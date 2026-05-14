@@ -85,6 +85,7 @@ export default function Projects() {
 
     const navRef = useRef<HTMLDivElement>(null);
     const activeIdRef = useRef<number | null>(null);
+    const prevDisplayIdRef = useRef<number | null>(null);
     const pendingNavRef = useRef<{ direction: "prev" | "next" } | null>(null);
     const isAnimatingNavRef = useRef(false);
     const scrollCooldownRef = useRef(false);
@@ -112,10 +113,26 @@ export default function Projects() {
 
     // ── background cross-fade ────────────────────────────────
     useEffect(() => {
+        const prev = prevDisplayIdRef.current;
+        prevDisplayIdRef.current = displayId;
+
         projects.forEach((p) => {
             const el = imageRefs.current.get(p.id);
             if (!el) return;
-            gsap.to(el, { opacity: displayId === p.id ? 1 : 0, duration: 0.7, ease: "power2.out" });
+
+            if (p.id === displayId) {
+                gsap.fromTo(el,
+                    { scale: 1.06, opacity: 0, filter: "blur(12px)" },
+                    { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.75, ease: "power3.out" }
+                );
+            } else if (p.id === prev && displayId !== null) {
+                gsap.to(el, {
+                    opacity: 0, filter: "blur(12px)", duration: 0.55, ease: "power2.in",
+                    onComplete: () => gsap.set(el, { filter: "blur(0px)" }),
+                });
+            } else {
+                gsap.to(el, { opacity: 0, duration: 0.4 });
+            }
         });
     }, [displayId]);
 
