@@ -242,6 +242,7 @@ export default function Projects() {
         gsap.to(overlayRef.current, { opacity: 0, duration: 0.4, delay: 0.5 });
         gsap.to(listRef.current, { opacity: 1, y: 0, duration: 0.4, delay: 0.6, ease: "power2.out" });
 
+        setAutoId(id);
         setIsExpanded(false);
         setTimeout(() => {
             setActiveId(null);
