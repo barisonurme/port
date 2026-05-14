@@ -122,7 +122,7 @@ export default function Projects() {
 
             if (p.id === displayId) {
                 gsap.fromTo(el,
-                    { scale: 1.06, opacity: 0, filter: "blur(12px)" },
+                    { scale: 1.2, opacity: 0, filter: "blur(12px)" },
                     { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.75, ease: "power3.out" }
                 );
             } else if (p.id === prev && displayId !== null) {
