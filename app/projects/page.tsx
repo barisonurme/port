@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { MoveLeft, X } from "lucide-react";
-import Link from "next/link";
+import { ChevronLeft, ChevronRight, MoveLeft } from "lucide-react";
+import { TransitionLink } from "@/components/transition-link";
+import { usePageTransition } from "@/components/transition-provider";
 import { Button } from "@/components/ui/button";
 
 const projects = [
@@ -63,6 +64,7 @@ const projects = [
 const TITLE_FONT = "clamp(4rem, 14vw, 13rem)";
 
 export default function Projects() {
+    const navigate = usePageTransition();
     const [hoveredId, setHoveredId] = useState<number | null>(null);
     const [autoId, setAutoId] = useState<number>(projects[0].id);
     const [activeId, setActiveId] = useState<number | null>(null);
@@ -81,9 +83,18 @@ export default function Projects() {
     const heroImgRef = useRef<HTMLDivElement>(null);   // clips from full-screen → slot
     const heroTitleRef = useRef<HTMLDivElement>(null);   // flies from list → h1
 
+    const navRef = useRef<HTMLDivElement>(null);
     const activeIdRef = useRef<number | null>(null);
+    const pendingNavRef = useRef<{ direction: "prev" | "next" } | null>(null);
+    const isAnimatingNavRef = useRef(false);
+    const scrollCooldownRef = useRef(false);
 
     const activeProject = projects.find((p) => p.id === activeId) ?? null;
+    const currentIndex = activeId != null ? projects.findIndex((p) => p.id === activeId) : -1;
+    const prevProject = currentIndex > -1 ? projects[(currentIndex - 1 + projects.length) % projects.length] : null;
+    const nextProject = currentIndex > -1 ? projects[(currentIndex + 1) % projects.length] : null;
+    const prevIndex = prevProject ? projects.indexOf(prevProject) : -1;
+    const nextIndex = nextProject ? projects.indexOf(nextProject) : -1;
 
     // Keep ref in sync without triggering render
     useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
@@ -97,8 +108,7 @@ export default function Projects() {
             setAutoId(projects[idx].id);
         }, 2500);
         return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isExpanded]);
+    }, [isExpanded, autoId]);
 
     // ── background cross-fade ────────────────────────────────
     useEffect(() => {
@@ -108,6 +118,34 @@ export default function Projects() {
             gsap.to(el, { opacity: displayId === p.id ? 1 : 0, duration: 0.7, ease: "power2.out" });
         });
     }, [displayId]);
+
+    // ── navigation animate-in (fires after activeId state update) ────
+    useEffect(() => {
+        if (!pendingNavRef.current || !isExpanded || !activeId) return;
+        const { direction } = pendingNavRef.current;
+        pendingNavRef.current = null;
+        const xIn = direction === "next" ? 80 : -80;
+        gsap.fromTo(titleRef.current, { x: xIn, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" });
+        gsap.fromTo(expandedImgRef.current, { x: xIn * 0.3, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" });
+        gsap.fromTo(detailRef.current, { opacity: 0 }, { opacity: 1, duration: 0.35, delay: 0.15 });
+        gsap.fromTo(navRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3, delay: 0.2, onComplete: () => { isAnimatingNavRef.current = false; } });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeId]);
+
+    // ── navigate ─────────────────────────────────────────────
+    function navigateTo(newId: number, direction: "prev" | "next") {
+        if (isAnimatingNavRef.current) return;
+        isAnimatingNavRef.current = true;
+        const xOut = direction === "next" ? -80 : 80;
+        gsap.to(titleRef.current, { x: xOut, opacity: 0, duration: 0.25, ease: "power2.in" });
+        gsap.to(expandedImgRef.current, { x: xOut * 0.3, opacity: 0, duration: 0.3, ease: "power2.in" });
+        gsap.to(detailRef.current, { opacity: 0, duration: 0.2 });
+        gsap.to(navRef.current, { opacity: 0, duration: 0.2 });
+        gsap.delayedCall(0.32, () => {
+            pendingNavRef.current = { direction };
+            setActiveId(newId);
+        });
+    }
 
     // ── close ────────────────────────────────────────────────
     function close() {
@@ -182,6 +220,8 @@ export default function Projects() {
         }
 
         gsap.to(detailRef.current, { opacity: 0, duration: 0.15 });
+        gsap.to(navRef.current, { opacity: 0, duration: 0.15 });
+        isAnimatingNavRef.current = false;
         gsap.to(overlayRef.current, { opacity: 0, duration: 0.4, delay: 0.5 });
         gsap.to(listRef.current, { opacity: 1, y: 0, duration: 0.4, delay: 0.6, ease: "power2.out" });
 
@@ -200,11 +240,54 @@ export default function Projects() {
         gsap.to(listRef.current, { opacity: 0, y: 8, duration: 0.2 });
     }
 
+    // ── scroll to navigate ───────────────────────────────────
+    useEffect(() => {
+        const onWheel = (e: WheelEvent) => {
+            if (isExpanded) return;
+            if (scrollCooldownRef.current) return;
+            scrollCooldownRef.current = true;
+            setTimeout(() => { scrollCooldownRef.current = false; }, 600);
+
+            const direction = e.deltaY > 0 ? "next" : "prev";
+            setAutoId((cur) => {
+                const idx = projects.findIndex((p) => p.id === cur);
+                const next = direction === "next"
+                    ? (idx + 1) % projects.length
+                    : (idx - 1 + projects.length) % projects.length;
+                return projects[next].id;
+            });
+        };
+        window.addEventListener("wheel", onWheel, { passive: true });
+        return () => window.removeEventListener("wheel", onWheel);
+    });
+
     // ── escape ───────────────────────────────────────────────
     useEffect(() => {
-        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && isExpanded) close(); };
+        const onKey = (e: KeyboardEvent) => {
+            if (!isExpanded) return;
+            if (e.key === "Escape" || e.key === "Backspace") close();
+            if (e.key === "ArrowLeft" && prevProject) navigateTo(prevProject.id, "prev");
+            if (e.key === "ArrowRight" && nextProject) navigateTo(nextProject.id, "next");
+        };
+        const onKeyList = (e: KeyboardEvent) => {
+            if (isExpanded) return;
+            if (e.key === "Backspace") navigate("/");
+            if (e.key === "Enter" && displayId != null) open(displayId);
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                const dir = e.key === "ArrowDown" ? 1 : -1;
+                setAutoId((cur) => {
+                    const idx = projects.findIndex((p) => p.id === cur);
+                    return projects[(idx + dir + projects.length) % projects.length].id;
+                });
+            }
+        };
         window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
+        window.addEventListener("keydown", onKeyList);
+        return () => {
+            window.removeEventListener("keydown", onKey);
+            window.removeEventListener("keydown", onKeyList);
+        };
     });
 
     // ── open animation ───────────────────────────────────────
@@ -288,16 +371,23 @@ export default function Projects() {
             });
         }
 
-        // Detail: slide up after animations land
+        // Detail and nav: slide up after animations land
         gsap.fromTo(detailRef.current,
             { y: 20, opacity: 0 },
             { y: 0, opacity: 1, duration: 0.45, ease: "power2.out", delay: 0.8 }
         );
-    }, [isExpanded, activeProject]);
+        gsap.fromTo(navRef.current,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.3, ease: "power2.out", delay: 0.9 }
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isExpanded]);
 
     return (
-        <div className="relative w-full h-screen overflow-hidden bg-zinc-950">
-
+        <div
+            className="relative w-full h-screen overflow-hidden bg-zinc-950"
+            onClick={() => { if (!isExpanded && displayId != null) open(displayId); }}
+        >
             {/* ── background images ─────────────────────────── */}
             <div className="absolute inset-0 z-0">
                 {projects.map((p) => (
@@ -313,43 +403,37 @@ export default function Projects() {
                 ))}
                 <div className="absolute inset-0 bg-zinc-950 -z-10" />
             </div>
-
             {/* ── grain ─────────────────────────────────────── */}
             <div
                 className="pointer-events-none absolute inset-0 z-10 opacity-[0.035]"
                 style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
             />
-
-            {/* ── nav ───────────────────────────────────────── */}
-            <div className="flex gap-2 items-center absolute top-10 left-10 z-20">
-                <Link href="/" className="flex items-center gap-2 text-white/30 hover:text-white/60 transition-colors duration-200">
-                    <MoveLeft size={14} />
-                    <p className="text-xs tracking-[0.25em] uppercase">Home</p>
-                </Link>
-            </div>
-            <div className="absolute top-10 right-10 z-20">
-                <p className="text-white/25 text-xs">{String(projects.length).padStart(2, "0")} Projects</p>
-            </div>
-
+            <TransitionLink
+                href="/"
+                className="absolute top-5 right-5 z-20 flex items-center gap-2 text-white/40 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200"
+            >
+                <MoveLeft />
+                BACKSPACE
+            </TransitionLink>
             {/* ── project list — bottom right ───────────────── */}
             <div ref={listRef} className="absolute bottom-10 right-10 z-20 flex flex-col items-end gap-0.5">
                 {projects.map((p, i) => (
                     <button
                         key={p.id}
                         onMouseEnter={() => setHoveredId(p.id)}
-                        onMouseLeave={() => setHoveredId(null)}
-                        onClick={() => open(p.id)}
+                        onMouseLeave={() => { setAutoId(p.id); setHoveredId(null); }}
+                        onClick={(e) => { e.stopPropagation(); open(p.id); }}
                         className="group flex items-center gap-4 py-1.5 cursor-pointer"
                     >
-                        <span className="text-white/20 text-xs group-hover:text-white/40 transition-colors duration-200">
+                        <span className={`text-xs transition-colors duration-500 ${displayId === p.id ? "text-white/50" : "text-white/20"}`}>
                             {String(i + 1).padStart(2, "0")}
                         </span>
-                        <span className="text-white/40 text-xs uppercase tracking-widest group-hover:text-white/70 transition-colors duration-200">
+                        <span className={`text-xs uppercase tracking-widest transition-colors duration-500 ${displayId === p.id ? "text-white/70" : "text-white/30"}`}>
                             {p.category}
                         </span>
                         <span
                             ref={(el) => { if (el) listTitleRefs.current.set(p.id, el); }}
-                            className="text-white font-light transition-[letter-spacing] duration-300 group-hover:tracking-wide"
+                            className={`font-light transition-[letter-spacing,color,opacity] duration-500 ${displayId === p.id ? "text-white tracking-wide" : "text-white/40"}`}
                             style={{ fontSize: "clamp(1.1rem, 2vw, 1.5rem)" }}
                         >
                             {p.title}
@@ -357,7 +441,6 @@ export default function Projects() {
                     </button>
                 ))}
             </div>
-
             {/* ── Hero: flying title ────────────────────────── */}
             {/* Fixed so it lives above all stacking contexts — always visible during transition */}
             <div
@@ -367,7 +450,6 @@ export default function Projects() {
             >
                 {activeProject?.title}
             </div>
-
             {/* ── Hero: clip-path image ─────────────────────── */}
             <div
                 ref={heroImgRef}
@@ -376,10 +458,9 @@ export default function Projects() {
             >
                 {activeProject && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={activeProject.image} alt="" className="w-full h-full object-cover" />
+                    (<img src={activeProject.image} alt="" className="w-full h-full object-cover" />)
                 )}
             </div>
-
             {/* ── EXPANDED VIEW ─────────────────────────────── */}
             <div
                 ref={overlayRef}
@@ -390,11 +471,39 @@ export default function Projects() {
 
                 <Button
                     onClick={close}
-                    className="absolute top-10 right-10 z-20 text-white/40 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200"
+                    className="absolute top-5 right-5 z-20 text-white/40 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200"
                 >
-                    ESC
-                    <X />
+                    <MoveLeft />
+                    BACKSPACE
                 </Button>
+
+                {/* ── prev / next nav — bottom right ─────────── */}
+                <div ref={navRef} className="absolute bottom-10 right-10 z-20 flex items-center gap-6 opacity-0">
+                    {prevProject && (
+                        <button
+                            onClick={() => navigateTo(prevProject.id, "prev")}
+                            className="group flex items-center gap-2 text-white/30 hover:text-white/70 transition-colors duration-200"
+                        >
+                            <ChevronLeft size={14} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+                            <span className="text-white/20 text-xs group-hover:text-white/40 transition-colors duration-200">
+                                {String(prevIndex + 1).padStart(2, "0")}
+                            </span>
+                            <span className="text-xs uppercase tracking-widest">{prevProject.title}</span>
+                        </button>
+                    )}
+                    {nextProject && (
+                        <button
+                            onClick={() => navigateTo(nextProject.id, "next")}
+                            className="group flex items-center gap-2 text-white/30 hover:text-white/70 transition-colors duration-200"
+                        >
+                            <span className="text-xs uppercase tracking-widest">{nextProject.title}</span>
+                            <span className="text-white/20 text-xs group-hover:text-white/40 transition-colors duration-200">
+                                {String(nextIndex + 1).padStart(2, "0")}
+                            </span>
+                            <ChevronRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                        </button>
+                    )}
+                </div>
 
                 {/* No overflow on this wrapper — avoids clipping GSAP-transformed children */}
                 <div className="relative z-10 flex flex-col h-full px-10 sm:px-16 pt-14 pb-6">
@@ -415,11 +524,11 @@ export default function Projects() {
                     >
                         {activeProject && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            (<img
                                 src={activeProject.image}
                                 alt={activeProject.title}
                                 className="w-full h-full object-cover"
-                            />
+                            />)
                         )}
                     </div>
 
