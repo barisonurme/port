@@ -38,6 +38,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
 
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
+    if (isTouchDevice) return
+
     const onWheel = (e: WheelEvent) => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight
       if (maxScroll <= 0) return
