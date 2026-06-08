@@ -65,17 +65,17 @@ export function SienaParallax() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen w-full overflow-hidden bg-black"
+      className="relative h-screen w-full overflow-hidden bg-background"
     >
       {/* Letterbox bars */}
       <div
         ref={topBarRef}
-        className="absolute top-0 left-0 right-0 z-10 bg-black origin-top"
+        className="absolute top-0 left-0 right-0 z-10 bg-background origin-top"
         style={{ height: "12%" }}
       />
       <div
         ref={bottomBarRef}
-        className="absolute bottom-0 left-0 right-0 z-10 bg-black origin-bottom"
+        className="absolute bottom-0 left-0 right-0 z-10 bg-background origin-bottom"
         style={{ height: "12%" }}
       />
 
@@ -93,7 +93,7 @@ export function SienaParallax() {
             alt="Cinematic landscape"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-background/30" />
         </div>
       </div>
 

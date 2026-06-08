@@ -1,20 +1,35 @@
-import { SienaParallax } from "@/components/siena-parallax";
-import { Button } from "@/components/ui/button";
-import { TransitionLink } from "@/components/transition-link";
 import { EnterKeyNav } from "@/components/enter-key-nav";
+import PrismaticBurstHero from "@/components/PrismaticBurstHero";
+import HeroText from "@/components/HeroText";
+import { ContactSection } from "@/components/ContactSection";
 
 export default function Home() {
   return (
-    <main className="bg-black">
-      <SienaParallax />
+    <main className="relative">
+      <div className="fixed inset-0 z-0">
+        <PrismaticBurstHero />
+      </div>
+
+      <div data-hero-trigger className="relative w-full">
+        <section className="sticky top-0 flex items-center justify-center z-10 w-full overflow-hidden">
+          <div className="h-screen flex items-center justify-center w-full z-999">
+            <HeroText />
+          </div>
+        </section>
+      </div>
+
       <EnterKeyNav href="/projects" />
-      <section className="h-screen flex items-center justify-center bg-black">
-        <TransitionLink href='/projects' className="flex flex-col items-center gap-4">
-          <Button className="text-white/20 text-sm tracking-widest uppercase">
-            More below
-          </Button>
-        </TransitionLink>
-      </section>
+
+      <div className="relative max-w-7xl mx-auto px-4 py-16  z-999">
+        <ContactSection />
+      </div>
+
+      <footer className="relative z-999 w-full py-6 flex justify-center">
+        <span className="text-sm opacity-30 tracking-widest uppercase font-mono">
+          barisonurme &mdash; 2026
+        </span>
+      </footer>
+
     </main>
   );
 }
