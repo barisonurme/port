@@ -2,12 +2,13 @@ import { EnterKeyNav } from "@/components/enter-key-nav";
 
 import HeroText from "@/components/HeroText";
 import { ContactSection } from "@/components/ContactSection";
+import PrismaticBurstHero from "@/components/PrismaticBurstHero";
 
 export default function Home() {
   return (
     <main className="relative">
       <div className="fixed inset-0 z-0">
-        {/*  <PrismaticBurstHero /> */}
+        <PrismaticBurstHero />
       </div>
 
       <div data-hero-trigger className="relative w-full">
