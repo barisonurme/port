@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 import { ArrowUpRight } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -19,9 +20,42 @@ export function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', type: '', message: '' });
 
   useEffect(() => {
-    if (submitted) return;
+    gsap.registerPlugin(ScrollTrigger, SplitText);
 
-    gsap.registerPlugin(ScrollTrigger);
+    if (submitted) {
+      const ctx = gsap.context(() => {
+        gsap.set('.cs-success', { opacity: 1 });
+
+        gsap.fromTo('.cs-success-sub',
+          { y: 16, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }
+        );
+
+        const split = new SplitText('.cs-success-title', { type: 'chars' });
+        gsap.fromTo(split.chars,
+          { y: 56, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: 'expo.out', stagger: 0.03, delay: 0.1 }
+        );
+
+        const btnDelay = 0.1 + split.chars.length * 0.03 + 0.25;
+        gsap.fromTo('.cs-success-btn',
+          { y: 16, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out', delay: btnDelay }
+        );
+      }, ref);
+
+      const check = () => {
+        if (ref.current && ref.current.getBoundingClientRect().bottom < 0) {
+          setSubmitted(false);
+          setSending(false);
+        }
+      };
+      window.addEventListener('scroll', check, { passive: true });
+      return () => {
+        ctx.revert();
+        window.removeEventListener('scroll', check);
+      };
+    }
 
     const ctx = gsap.context(() => {
       const trigger = {
@@ -87,7 +121,7 @@ export function ContactSection() {
     gsap.to(el.querySelectorAll('.cs-field'), { y: -16, opacity: 0, stagger: 0.04, duration: 0.35, ease: 'power2.in' });
     gsap.to(el.querySelector('.cs-footer'), { opacity: 0, duration: 0.25, delay: 0.1 });
     gsap.to(el.querySelector('.cs-title'), { opacity: 0, duration: 0.3, delay: 0.15 });
-    gsap.delayedCall(0.55, () => setSubmitted(true));
+    setTimeout(() => setSubmitted(true), 550);
   }
 
   const set =
@@ -98,17 +132,17 @@ export function ContactSection() {
   return (
     <section id="contact" ref={ref} className=" px-10 sm:px-16 py-28">
       {submitted ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <p className="text-white/25 text-xs uppercase tracking-widest mb-8">Message received</p>
+        <div key="success" className="cs-success flex flex-col items-center justify-center min-h-[60vh] text-center" style={{ opacity: 0 }}>
+          <p className="cs-success-sub text-white/25 text-xs uppercase tracking-widest mb-8">Talk to you soon!</p>
           <h2
-            className="font-bold text-white leading-none mb-10"
+            className="cs-success-title font-bold text-white leading-none mb-10"
             style={{ fontSize: 'clamp(4rem, 13vw, 10rem)' }}
           >
             Message
             <br />
             Recived!
           </h2>
-          <SlideButton onClick={() => { setSubmitted(false); setForm({ name: '', email: '', type: '', message: '' }); }}>Send Again</SlideButton>
+          <SlideButton className="cs-success-btn" onClick={() => { setSubmitted(false); setSending(false); setForm({ name: '', email: '', type: '', message: '' }); }}>Send Again</SlideButton>
         </div>
       ) : (
         <>
