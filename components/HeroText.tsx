@@ -25,8 +25,8 @@ export default function HeroText() {
       scrollTrigger: {
         trigger,
         start: 'top top',
-        end: '5% top',
-        scrub: true,
+        end: '20% top',
+        scrub: 0.5,
       },
     });
 
