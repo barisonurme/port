@@ -15,6 +15,7 @@ export function ContactSection() {
   const [focused, setFocused] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', type: '', message: '' });
 
   useEffect(() => {
@@ -70,13 +71,16 @@ export function ContactSection() {
     if (!el || sending) return;
 
     setSending(true);
+    setError(false);
     try {
       await addDoc(collection(db, 'contacts'), {
         ...form,
         createdAt: serverTimestamp(),
       });
-    } catch {
+    } catch (err) {
+      console.error('[ContactSection] submit failed:', err);
       setSending(false);
+      setError(true);
       return;
     }
 
@@ -197,6 +201,11 @@ export function ContactSection() {
             </Field>
 
             <div className="cs-footer mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6" style={{ opacity: 0 }}>
+              {error && (
+                <p className="text-red-400/70 text-sm">
+                  Something went wrong. Try again or email me directly.
+                </p>
+              )}
               <p className="text-white/25 text-sm">
                 Or reach me at{' '}
                 <a

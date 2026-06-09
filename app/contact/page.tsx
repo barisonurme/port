@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { MoveLeft } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { TransitionLink } from '@/components/transition-link';
 import { SlideButton } from '@/components/ui/slide-button';
 
@@ -15,6 +17,8 @@ export default function ContactPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [focused, setFocused] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', type: '', message: '' });
 
   useEffect(() => {
@@ -39,8 +43,22 @@ export default function ContactPage() {
     return () => ctx.revert();
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (sending) return;
+    setSending(true);
+    setError(false);
+    try {
+      await addDoc(collection(db, 'contacts'), {
+        ...form,
+        createdAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error('[ContactPage] submit failed:', err);
+      setSending(false);
+      setError(true);
+      return;
+    }
     gsap.to('.c-field', { y: -18, opacity: 0, stagger: 0.05, duration: 0.35, ease: 'power2.in' });
     gsap.to('.c-footer', { opacity: 0, duration: 0.25, delay: 0.1 });
     gsap.to('.c-title-area', { opacity: 0, duration: 0.3, delay: 0.15 });
@@ -188,18 +206,27 @@ export default function ContactPage() {
 
             {/* Footer row */}
             <div className="c-footer mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 opacity-0">
-              <p className="text-white/25 text-sm">
-                Or reach me at{' '}
-                <a
-                  href="mailto:brsnrm@gmail.com"
-                  className="text-white/45 hover:text-white transition-colors duration-200 underline underline-offset-4 decoration-white/20 hover:decoration-white/50"
-                >
-                  brsnrm@gmail.com
-                </a>
-              </p>
+              <div className="flex flex-col gap-2">
+                {error && (
+                  <p className="text-red-400/70 text-sm">
+                    Something went wrong. Try again or email me directly.
+                  </p>
+                )}
+                <p className="text-white/25 text-sm">
+                  Or reach me at{' '}
+                  <a
+                    href="mailto:brsnrm@gmail.com"
+                    className="text-white/45 hover:text-white transition-colors duration-200 underline underline-offset-4 decoration-white/20 hover:decoration-white/50"
+                  >
+                    brsnrm@gmail.com
+                  </a>
+                </p>
+              </div>
 
               {/* Slide-fill CTA */}
-              <SlideButton type="submit">Send Message</SlideButton>
+              <SlideButton type="submit" disabled={sending}>
+                {sending ? 'Sending…' : 'Send Message'}
+              </SlideButton>
             </div>
           </form>
         </div>
