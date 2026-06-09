@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { SlideButton } from './ui/slide-button';
 
 const PROJECT_TYPES = ['Web Design', 'Development', 'Motion', 'Branding', 'Other'];
@@ -12,6 +14,7 @@ export function ContactSection() {
   const ref = useRef<HTMLDivElement>(null);
   const [focused, setFocused] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', type: '', message: '' });
 
   useEffect(() => {
@@ -61,10 +64,22 @@ export function ContactSection() {
     return () => ctx.revert();
   }, [submitted]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const el = ref.current;
-    if (!el) return;
+    if (!el || sending) return;
+
+    setSending(true);
+    try {
+      await addDoc(collection(db, 'contacts'), {
+        ...form,
+        createdAt: serverTimestamp(),
+      });
+    } catch {
+      setSending(false);
+      return;
+    }
+
     gsap.to(el.querySelectorAll('.cs-field'), { y: -16, opacity: 0, stagger: 0.04, duration: 0.35, ease: 'power2.in' });
     gsap.to(el.querySelector('.cs-footer'), { opacity: 0, duration: 0.25, delay: 0.1 });
     gsap.to(el.querySelector('.cs-title'), { opacity: 0, duration: 0.3, delay: 0.15 });
@@ -194,10 +209,11 @@ export function ContactSection() {
 
               <button
                 type="submit"
-                className="group relative flex items-center gap-3 overflow-hidden border border-white/20 hover:border-white/50 px-8 py-4 text-sm uppercase tracking-widest text-white/50 hover:text-zinc-950 transition-colors duration-500 cursor-pointer"
+                disabled={sending}
+                className="group relative flex items-center gap-3 overflow-hidden border border-white/20 hover:border-white/50 px-8 py-4 text-sm uppercase tracking-widest text-white/50 hover:text-zinc-950 transition-colors duration-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="absolute inset-0 bg-white origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]" />
-                <span className="relative z-10">Send Message</span>
+                <span className="relative z-10">{sending ? 'Sending…' : 'Send Message'}</span>
                 <ArrowUpRight
                   size={15}
                   className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
