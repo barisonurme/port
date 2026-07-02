@@ -290,7 +290,6 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
 
                 {/* Close button */}
                 <div
-                  className="absolute top-6 right-8 flex items-center gap-2 text-white/30 hover:text-white/70 transition-colors"
                   onMouseEnter={() => { overCloseRef.current = true; if (cursorIconRef.current) cursorIconRef.current.textContent = "✕"; }}
                   onMouseLeave={() => { overCloseRef.current = false; }}
                 >

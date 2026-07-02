@@ -7,8 +7,9 @@ import { TransitionLink } from "@/components/transition-link";
 import { usePageTransition } from "@/components/transition-provider";
 import { Button } from "@/components/ui/button";
 import { SlideButton } from "@/components/ui/slide-button";
+import Image from "next/image";
 
-const UNDER_CONSTRUCTION = true;
+const UNDER_CONSTRUCTION = false;
 
 // ── Under Construction ───────────────────────────────────────────────────────
 
@@ -54,10 +55,11 @@ function UnderConstruction() {
     }, []);
 
     return (
-        <div className="relative w-full h-screen overflow-hidden bg-zinc-950 flex flex-col items-center justify-center">
+        <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center">
             <div
                 className="pointer-events-none absolute inset-0 z-10 opacity-[0.035]"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
+            /* Noise */
+            /* style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} */
             />
             <div className="absolute inset-0 flex flex-col justify-center gap-4 overflow-hidden pointer-events-none select-none" style={{ zIndex: 1 }}>
                 <div className="overflow-hidden">
@@ -115,25 +117,30 @@ const projects: {
 }[] = [
         {
             id: 1,
-            title: "Horizon",
-            year: "2024",
+            title: "ExpenseAI",
+            year: "2026",
             category: "Web App",
             description:
-                "A full-stack SaaS dashboard built with Next.js and Postgres. Real-time analytics, team management, and custom reporting pipelines.",
-            tech: ["Next.js", "TypeScript", "Postgres", "Tailwind"],
-            image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80",
+                "A full-stack personal finance tracker with an AI assistant. Built with Hono, Bun and Postgres on the backend and React 19 on the frontend, it tracks recurring expenses/income and uses an LLM to answer questions about your spending.",
+            tech: ["Hono", "Bun", "TypeScript", "PostgreSQL", "Drizzle ORM", "React", "TanStack Query", "Tailwind"],
+            image: "/expense-ai/expense-ai.png",
             content: (
                 <div className="mt-10 space-y-10">
                     <div className="grid grid-cols-2 gap-3">
-                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80" alt="Dashboard overview" className="w-full rounded-lg object-cover aspect-video" />
-                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80" alt="Analytics view" className="w-full rounded-lg object-cover aspect-video" />
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                            <Image src="/expense-ai/expense-ai-2.png" alt="Dashboard overview" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
+                        </div>
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                            <Image src="/expense-ai/expense-ai-3.png" alt="AI assistant chat" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
+                        </div>
                     </div>
                     <div>
                         <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
                         <ul className="space-y-2 text-white/55 text-sm font-light">
-                            <li>— Reduced report generation time by 70% with server-side streaming</li>
-                            <li>— Built a real-time presence system for 500+ concurrent users</li>
-                            <li>— Designed a role-based permission model supporting 12 access levels</li>
+                            <li>— Built an AI chat assistant (Groq) that answers spending questions grounded in the user&apos;s real transaction history</li>
+                            <li>— Designed a recurring-transaction engine for subscriptions and repeat income/expenses with end-date support</li>
+                            <li>— Implemented passwordless auth via email verification codes with JWT access/refresh token rotation</li>
+                            <li>— Shipped a guided onboarding flow that personalizes savings goals, check-in frequency, and dashboard focus metrics</li>
                         </ul>
                     </div>
                 </div>
@@ -141,103 +148,46 @@ const projects: {
         },
         {
             id: 2,
-            title: "Fauna",
-            year: "2024",
-            category: "Mobile",
+            title: "FitSmart",
+            year: "2026",
+            category: "Smart Devices",
             description:
-                "A nature-tracking mobile app with AI species identification. Built with React Native and a custom ML pipeline for image recognition.",
-            tech: ["React Native", "Python", "TensorFlow", "AWS"],
-            image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80",
+                "Exercise tracking app with AI-powered workout recommendations.",
+            tech: ["Swift", "WatchOS", "TensorFlow", "AWS"],
+            image: "./underconstruction.png",
             content: (
                 <div className="mt-10 space-y-10">
-                    <div className="grid grid-cols-3 gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&q=80" alt="App screen 1" className="w-full rounded-lg object-cover aspect-9/16" />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80" alt="App screen 2" className="w-full rounded-lg object-cover aspect-9/16" />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://images.unsplash.com/photo-1504006833117-8886a355efbf?w=400&q=80" alt="App screen 3" className="w-full rounded-lg object-cover aspect-9/16" />
-                    </div>
-                    <div>
-                        <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
-                        <ul className="space-y-2 text-white/55 text-sm font-light">
-                            <li>— 94% species identification accuracy across 8,000 plant & animal classes</li>
-                            <li>— Offline-first architecture — works deep in the wilderness</li>
-                            <li>— Featured in App Store&apos;s &quot;Apps We Love&quot; collection</li>
-                        </ul>
-                    </div>
+                    <UnderConstruction />
                 </div>
             ),
         },
         {
             id: 3,
-            title: "Marble",
-            year: "2023",
-            category: "Design System",
+            title: "MenuRest",
+            year: "2026",
+            category: "Web App",
             description:
-                "A minimal component library and design system used across 5 production apps. 60+ components, fully accessible, dark-mode first.",
-            tech: ["React", "Storybook", "Radix UI", "SCSS"],
-            image: "https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=1200&q=80",
+                "Helps restaurants manage inventory and reduce food waste by tracking ingredients, predicting demand, and suggesting recipes.",
+            tech: ["Next.js", "Cloudflare"],
+            image: "./underconstruction.png",
             content: (
                 <div className="mt-10 space-y-10">
-                    <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?w=1200&q=80" alt="Component overview" className="w-full rounded-lg object-cover" style={{ maxHeight: 280 }} />
-                    <div>
-                        <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
-                        <ul className="space-y-2 text-white/55 text-sm font-light">
-                            <li>— 60+ components with full Radix UI accessibility primitives</li>
-                            <li>— Zero-runtime CSS-in-JS — ships pure CSS custom properties</li>
-                            <li>— Adopted by 3 external teams within 6 months of open-sourcing</li>
-                        </ul>
-                    </div>
+                    <UnderConstruction />
                 </div>
             ),
         },
         {
             id: 4,
-            title: "Relay",
-            year: "2023",
-            category: "Infrastructure",
+            title: "Notify",
+            year: "2025",
+            category: "Web App",
             description:
-                "An open-source edge proxy built in Go. Sub-millisecond routing, plugin system, and a web-based control plane.",
-            tech: ["Go", "Docker", "Redis", "gRPC"],
-            image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80",
+                "Helps companies manage notifications and communication with their customers.",
+            tech: ["React", "GraphQL"],
+            image: "./underconstruction.png",
             content: (
                 <div className="mt-10 space-y-10">
-                    <img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&q=80" alt="Infrastructure diagram" className="w-full rounded-lg object-cover" style={{ maxHeight: 280 }} />
-                    <div>
-                        <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
-                        <ul className="space-y-2 text-white/55 text-sm font-light">
-                            <li>— &lt;0.3ms p99 routing latency under 10k req/s load</li>
-                            <li>— Plugin system with hot-reload — no downtime on config changes</li>
-                            <li>— 1.2k GitHub stars in first two months</li>
-                        </ul>
-                    </div>
-                </div>
-            ),
-        },
-        {
-            id: 5,
-            title: "Solace",
-            year: "2022",
-            category: "Product",
-            description:
-                "A mental wellness app with mood tracking and guided meditations. 10k+ active users within first month of launch.",
-            tech: ["Flutter", "Firebase", "Node.js", "OpenAI"],
-            image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
-            content: (
-                <div className="mt-10 space-y-10">
-                    <div className="grid grid-cols-2 gap-3">
-                        <img src="https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80" alt="Meditation screen" className="w-full rounded-lg object-cover aspect-video" />
-                        <img src="https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80" alt="Mood tracking" className="w-full rounded-lg object-cover aspect-video" />
-                    </div>
-                    <div>
-                        <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
-                        <ul className="space-y-2 text-white/55 text-sm font-light">
-                            <li>— 10k+ active users acquired organically in the first month</li>
-                            <li>— AI-generated meditation scripts tailored to daily mood input</li>
-                            <li>— 4.8★ rating across 2,000+ reviews on both app stores</li>
-                        </ul>
-                    </div>
+                    <UnderConstruction />
                 </div>
             ),
         },
@@ -690,8 +640,9 @@ function ProjectsPage() {
             >
                 <div className="absolute inset-0 bg-zinc-950" />
                 <Button
+                    variant='ghost'
                     onClick={close}
-                    className="absolute top-5 right-5 z-20 text-white/40 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200"
+                    className="absolute top-5 right-5 z-20text-sm tracking-widest uppercase transition-colors duration-200"
                 >
                     <MoveLeft />
                     BACKSPACE
