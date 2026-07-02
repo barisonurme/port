@@ -1,7 +1,7 @@
 "use client";;
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ChevronLeft, ChevronRight, Home, MoveLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, MoveLeft, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { TransitionLink } from "@/components/transition-link";
 import { usePageTransition } from "@/components/transition-provider";
@@ -126,7 +126,7 @@ const projectContent: Record<number, ReactNode> = {
                     <li>— Shipped a guided onboarding flow that personalizes savings goals, check-in frequency, and dashboard focus metrics</li>
                 </ul>
             </div>
-            <Button className='px-12' disabled>Demo will be available soon!</Button>
+            <Button className='px-4 md:px-12' disabled>Demo will be available soon!</Button>
         </div>
     ),
     2: (
@@ -611,12 +611,11 @@ function ProjectsPage() {
                 <Button
                     variant='ghost'
                     onClick={close}
-                    className="absolute top-5 right-5 z-20text-sm tracking-widest uppercase transition-colors duration-200"
+                    className="absolute top-2 right-2 z-20text-sm tracking-widest uppercase transition-colors duration-200 z-9999"
                 >
-                    <MoveLeft />
-                    BACKSPACE
+                    <X />
                 </Button>
-                <div ref={navRef} className="absolute bottom-10 right-10 z-20 flex items-center gap-6 opacity-0">
+                <div ref={navRef} className="absolute bottom-10 right-0 w-full justify-center  md:justify-end md:right-10 z-20 flex items-center gap-6 opacity-0">
                     {prevProject && (
                         <button
                             onClick={() => navigateTo(prevProject.id, "prev")}
@@ -644,7 +643,7 @@ function ProjectsPage() {
                 </div>
                 <div
                     ref={scrollWrapperRef}
-                    className="relative z-10 h-full overflow-y-auto px-10 sm:px-16 pt-14 pb-32"
+                    className="relative z-10 h-full overflow-y-auto px-4 md:px-10 sm:px-16 pt-14 pb-32"
                 >
                     <h1
                         ref={titleRef}

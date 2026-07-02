@@ -79,7 +79,6 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
             start: `top+=${(i - 1) * vh}px top`,
             end: `top+=${i * vh}px top`,
             scrub: true,
-            markers: true,
           },
         });
       }
@@ -95,7 +94,6 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
             start: `top+=${i * vh}px top`,
             end: `top+=${(i + 1) * vh}px top`,
             scrub: true,
-            markers: true,
           },
         });
       }
@@ -292,7 +290,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
               onMouseMove={handleCardMouseMove}
               onMouseEnter={handleCardMouseEnter}
               onMouseLeave={handleCardMouseLeave}
-              className="group absolute top-1/2 left-1/2 w-[80vw] h-[82vh] rounded-2xl overflow-hidden cursor-none"
+              className="group absolute top-1/2 left-1/2 w-[90vw] h-[82vh] rounded-2xl overflow-hidden cursor-none"
               style={{ zIndex: i + 1 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

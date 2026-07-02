@@ -24,15 +24,15 @@ export default function HeroText() {
     gsap.set(el, { perspective: 300 });
 
     const loopTween = gsap.to(inner, {
-      scale: 1.1,
+      scale: 1,
       duration: 1.8,
       ease: 'power1.inOut',
       yoyo: true,
       repeat: -1,
     });
 
-    const xTo    = gsap.quickTo(inner, 'x',       { duration: 0.8, ease: 'power3.out' });
-    const yTo    = gsap.quickTo(inner, 'y',       { duration: 0.8, ease: 'power3.out' });
+    const xTo = gsap.quickTo(inner, 'x', { duration: 0.8, ease: 'power3.out' });
+    const yTo = gsap.quickTo(inner, 'y', { duration: 0.8, ease: 'power3.out' });
     const rotYTo = gsap.quickTo(inner, 'rotateY', { duration: 0.8, ease: 'power3.out' });
     const rotXTo = gsap.quickTo(inner, 'rotateX', { duration: 0.8, ease: 'power3.out' });
 
@@ -90,7 +90,7 @@ export default function HeroText() {
         className="flex flex-col items-center gap-2 will-change-transform"
         style={{ transformStyle: 'preserve-3d' }}
       >
-        <h1 className="text-6xl! font-bold">Creative Developer</h1>
+        <h1 className="text-4xl md:text-6xl! font-bold">Creative Developer</h1>
         <h4 className="text-2xl! opacity-50">Where ideas come to life with magic touch</h4>
 
         <div className="flex gap-4 mt-4">
