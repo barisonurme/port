@@ -134,7 +134,7 @@ void main(){
       hoverMat = rotY(ang.y) * rotX(ang.x);
     }
 
-    for (int i = 0; i < 44; ++i) {
+    for (int i = 0; i < 28; ++i) {
         vec3 P = marchT * dir;
         P.z -= 2.0;
         float rad = length(P);
@@ -211,6 +211,12 @@ const hexToRgb01 = (hex: string): [number, number, number] => {
   return [r, g, b];
 };
 
+// Renders the WebGL buffer below the CSS display size (upscaled by the browser)
+// to cut fragment-shader cost, which scales with pixel count.
+const RENDER_SCALE = 0.75;
+const TARGET_FPS = 30;
+const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
+
 const toPx = (v: number | string | undefined): number => {
   if (v == null) return 0;
   if (typeof v === 'number') return v;
@@ -256,7 +262,7 @@ const PrismaticBurst = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5) * RENDER_SCALE;
     const renderer = new Renderer({ dpr, alpha: false, antialias: false, preserveDrawingBuffer });
     rendererRef.current = renderer;
 
@@ -351,6 +357,7 @@ const PrismaticBurst = ({
     let raf = 0;
     let last = performance.now();
     let accumTime = 0;
+    let lastRender = 0;
 
     const update = (now: number) => {
       const dt = Math.max(0, now - last) * 0.001;
@@ -361,6 +368,11 @@ const PrismaticBurst = ({
         raf = requestAnimationFrame(update);
         return;
       }
+      if (now - lastRender < FRAME_INTERVAL_MS) {
+        raf = requestAnimationFrame(update);
+        return;
+      }
+      lastRender = now;
       const tau = 0.02 + Math.max(0, Math.min(1, hoverDampRef.current)) * 0.5;
       const alpha = 1 - Math.exp(-dt / tau);
       const tgt = mouseTargetRef.current;

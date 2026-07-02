@@ -4,9 +4,11 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { MeshTransmissionMaterial } from "@react-three/drei";
+import { usePageTransition } from "@/components/transition-provider";
+import { SlideButton } from "@/components/ui/slide-button";
 
 function GlassSphere() {
   return (
@@ -28,16 +30,21 @@ export type CARDS = {
   id: number;
   image: string;
   label: string;
+  /** When set, clicking the card navigates here instead of opening the lightbox. */
+  href?: string;
 }[]
 
 
-export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller?: { current: HTMLElement | null } }) {
+export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CARDS: CARDS; scroller?: { current: HTMLElement | null }; onActiveChange?: (index: number) => void }) {
+  const navigate = usePageTransition();
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const activeIndexRef = useRef(0);
   const overlayRef = useRef<HTMLDivElement>(null);
   const overlayImgRef = useRef<HTMLImageElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorIconRef = useRef<HTMLSpanElement>(null);
+  const cardCursorRef = useRef<HTMLDivElement>(null);
   const overCloseRef = useRef(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -94,11 +101,37 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
       }
     });
 
+    if (onActiveChange) {
+      activeIndexRef.current = 0;
+      onActiveChange(0);
+
+      ScrollTrigger.create({
+        trigger: container,
+        scroller: scrollerEl,
+        start: "top top",
+        end: `+=${Math.max(numCards - 1, 1) * vh}`,
+        scrub: true,
+        onUpdate: (self) => {
+          const idx = numCards > 1 ? Math.round(self.progress * (numCards - 1)) : 0;
+          if (idx !== activeIndexRef.current) {
+            activeIndexRef.current = idx;
+            onActiveChange(idx);
+          }
+        },
+      });
+    }
+
     return () => ScrollTrigger.getAll().forEach((t) => t.kill());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scroller]);
 
   const openCard = useCallback((index: number) => {
+    const href = CARDS[index]?.href;
+    if (href) {
+      navigate(href);
+      return;
+    }
+
     const card = cardRefs.current[index];
     const overlay = overlayRef.current;
     if (!card || !overlay) return;
@@ -126,7 +159,7 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
       duration: 0.65,
       ease: "power3.inOut",
     });
-  }, []);
+  }, [CARDS, navigate]);
 
   const closeCard = useCallback(() => {
     const overlay = overlayRef.current;
@@ -223,6 +256,24 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
     [closeCard, goTo]
   );
 
+  // Custom arrow cursor for the card previews
+  const handleCardMouseMove = useCallback((e: React.MouseEvent) => {
+    const cursor = cardCursorRef.current;
+    if (!cursor) return;
+    cursor.style.left = `${e.clientX}px`;
+    cursor.style.top = `${e.clientY}px`;
+  }, []);
+
+  const handleCardMouseEnter = useCallback(() => {
+    const cursor = cardCursorRef.current;
+    if (cursor) gsap.to(cursor, { opacity: 1, scale: 1, duration: 0.2, ease: "power2.out" });
+  }, []);
+
+  const handleCardMouseLeave = useCallback(() => {
+    const cursor = cardCursorRef.current;
+    if (cursor) gsap.to(cursor, { opacity: 0, scale: 0.8, duration: 0.2, ease: "power2.in" });
+  }, []);
+
   return (
     <>
       <div
@@ -238,17 +289,23 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
                 cardRefs.current[i] = el;
               }}
               onClick={() => openCard(i)}
-              className="absolute top-1/2 left-1/2 w-[80vw] h-[82vh] rounded-2xl overflow-hidden cursor-pointer"
+              onMouseMove={handleCardMouseMove}
+              onMouseEnter={handleCardMouseEnter}
+              onMouseLeave={handleCardMouseLeave}
+              className="group absolute top-1/2 left-1/2 w-[80vw] h-[82vh] rounded-2xl overflow-hidden cursor-none"
               style={{ zIndex: i + 1 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={card.image}
                 alt={card.label}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover saturate-0 group-hover:saturate-100 transition-[filter] duration-500 ease-out"
               />
               <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/50" />
-              <div className="absolute bottom-8 left-8 text-white/50 text-xs tracking-[0.3em] uppercase select-none">
+              <div
+                className="absolute bottom-8 left-8 text-white font-light leading-none select-none"
+                style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+              >
                 {card.label}
               </div>
             </div>
@@ -256,6 +313,12 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
 
 
         </div>
+      </div>
+
+      <div className="relative w-full py-32 flex items-center justify-center">
+        <SlideButton onClick={() => navigate("/projects")}>
+          See all projects
+        </SlideButton>
       </div>
 
       {mounted && createPortal(
@@ -319,6 +382,15 @@ export function StickyCardParallax({ CARDS, scroller }: { CARDS: CARDS; scroller
             <span ref={cursorIconRef} className="absolute inset-0 flex items-center justify-center text-white text-sm leading-none select-none z-10">
               →
             </span>
+          </div>
+
+          {/* Custom cursor for card previews */}
+          <div
+            ref={cardCursorRef}
+            className="fixed pointer-events-none z-300 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-14 h-14 rounded-full bg-white opacity-0"
+            style={{ top: -100, left: -100 }}
+          >
+            <ArrowUpRight className="text-zinc-950" size={22} strokeWidth={1.5} />
           </div>
         </>,
         document.body

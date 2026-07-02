@@ -1,13 +1,14 @@
-"use client";
-
-import { type ReactNode, useEffect, useRef, useState } from "react";
+"use client";;
+import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ChevronLeft, ChevronRight, Home, MoveLeft } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { TransitionLink } from "@/components/transition-link";
 import { usePageTransition } from "@/components/transition-provider";
 import { Button } from "@/components/ui/button";
 import { SlideButton } from "@/components/ui/slide-button";
 import Image from "next/image";
+import { projects } from "@/lib/projects-data";
 
 const UNDER_CONSTRUCTION = false;
 
@@ -105,98 +106,53 @@ function UnderConstruction() {
 
 // ── Projects ─────────────────────────────────────────────────────────────────
 
-const projects: {
-    id: number;
-    title: string;
-    year: string;
-    category: string;
-    description: string;
-    tech: string[];
-    image: string;
-    content?: ReactNode;
-}[] = [
-        {
-            id: 1,
-            title: "ExpenseAI",
-            year: "2026",
-            category: "Web App",
-            description:
-                "A full-stack personal finance tracker with an AI assistant. Built with Hono, Bun and Postgres on the backend and React 19 on the frontend, it tracks recurring expenses/income and uses an LLM to answer questions about your spending.",
-            tech: ["Hono", "Bun", "TypeScript", "PostgreSQL", "Drizzle ORM", "React", "TanStack Query", "Tailwind"],
-            image: "/expense-ai/expense-ai.png",
-            content: (
-                <div className="mt-10 space-y-10">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                            <Image src="/expense-ai/expense-ai-2.png" alt="Dashboard overview" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
-                        </div>
-                        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                            <Image src="/expense-ai/expense-ai-3.png" alt="AI assistant chat" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
-                        <ul className="space-y-2 text-white/55 text-sm font-light">
-                            <li>— Built an AI chat assistant (Groq) that answers spending questions grounded in the user&apos;s real transaction history</li>
-                            <li>— Designed a recurring-transaction engine for subscriptions and repeat income/expenses with end-date support</li>
-                            <li>— Implemented passwordless auth via email verification codes with JWT access/refresh token rotation</li>
-                            <li>— Shipped a guided onboarding flow that personalizes savings goals, check-in frequency, and dashboard focus metrics</li>
-                        </ul>
-                    </div>
+const projectContent: Record<number, ReactNode> = {
+    1: (
+        <div className="mt-10 space-y-10">
+            <div className="grid grid-cols-2 gap-3">
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                    <Image src="/expense-ai/expense-ai-2.png" alt="Dashboard overview" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
                 </div>
-            ),
-        },
-        {
-            id: 2,
-            title: "FitSmart",
-            year: "2026",
-            category: "Smart Devices",
-            description:
-                "Exercise tracking app with AI-powered workout recommendations.",
-            tech: ["Swift", "WatchOS", "TensorFlow", "AWS"],
-            image: "./underconstruction.png",
-            content: (
-                <div className="mt-10 space-y-10">
-                    <UnderConstruction />
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                    <Image src="/expense-ai/expense-ai-3.png" alt="AI assistant chat" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
                 </div>
-            ),
-        },
-        {
-            id: 3,
-            title: "MenuRest",
-            year: "2026",
-            category: "Web App",
-            description:
-                "Helps restaurants manage inventory and reduce food waste by tracking ingredients, predicting demand, and suggesting recipes.",
-            tech: ["Next.js", "Cloudflare"],
-            image: "./underconstruction.png",
-            content: (
-                <div className="mt-10 space-y-10">
-                    <UnderConstruction />
-                </div>
-            ),
-        },
-        {
-            id: 4,
-            title: "Notify",
-            year: "2025",
-            category: "Web App",
-            description:
-                "Helps companies manage notifications and communication with their customers.",
-            tech: ["React", "GraphQL"],
-            image: "./underconstruction.png",
-            content: (
-                <div className="mt-10 space-y-10">
-                    <UnderConstruction />
-                </div>
-            ),
-        },
-    ];
+            </div>
+            <div>
+                <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                <ul className="space-y-2 text-white/55 text-sm font-light">
+                    <li>— Built an AI chat assistant (Groq) that answers spending questions grounded in the user&apos;s real transaction history</li>
+                    <li>— Designed a recurring-transaction engine for subscriptions and repeat income/expenses with end-date support</li>
+                    <li>— Implemented passwordless auth via email verification codes with JWT access/refresh token rotation</li>
+                    <li>— Shipped a guided onboarding flow that personalizes savings goals, check-in frequency, and dashboard focus metrics</li>
+                </ul>
+            </div>
+            <Button className='px-12' disabled>Demo will be available soon!</Button>
+        </div>
+    ),
+    2: (
+        <div className="mt-10 space-y-10">
+            <UnderConstruction />
+        </div>
+    ),
+    3: (
+        <div className="mt-10 space-y-10">
+            <UnderConstruction />
+        </div>
+    ),
+    4: (
+        <div className="mt-10 space-y-10">
+            <UnderConstruction />
+        </div>
+    ),
+};
 
 const TITLE_FONT = "clamp(4rem, 14vw, 13rem)";
 
 function ProjectsPage() {
     const navigate = usePageTransition();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [hoveredId, setHoveredId] = useState<number | null>(null);
     const [autoId, setAutoId] = useState<number>(projects[0].id);
     const [activeId, setActiveId] = useState<number | null>(null);
@@ -289,12 +245,15 @@ function ProjectsPage() {
             if (scrollWrapperRef.current) scrollWrapperRef.current.scrollTop = 0;
             pendingNavRef.current = { direction };
             setActiveId(newId);
+            router.replace(`${pathname}?open=${newId}`, { scroll: false });
         });
     }
 
     function close() {
         const id = activeIdRef.current;
         if (!id) return;
+
+        router.replace(pathname, { scroll: false });
 
         const listTitleEl = listTitleRefs.current.get(id);
         const h1El = titleRef.current;
@@ -384,7 +343,17 @@ function ProjectsPage() {
         setActiveId(id);
         setIsExpanded(true);
         gsap.to(listRef.current, { opacity: 0, y: 8, duration: 0.2 });
+        router.replace(`${pathname}?open=${id}`, { scroll: false });
     }
+
+    useEffect(() => {
+        const openId = Number(searchParams.get("open"));
+        if (openId === activeIdRef.current) return;
+        if (!projects.some((p) => p.id === openId)) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        open(openId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
     useEffect(() => {
         if (!isExpanded) return;
@@ -713,7 +682,7 @@ function ProjectsPage() {
                                 </span>
                             ))}
                         </div>
-                        {activeProject?.content}
+                        {activeProject && projectContent[activeProject.id]}
                     </div>
                 </div>
             </div>
@@ -724,5 +693,9 @@ function ProjectsPage() {
 // ── Page entry ────────────────────────────────────────────────────────────────
 
 export default function Projects() {
-    return UNDER_CONSTRUCTION ? <UnderConstruction /> : <ProjectsPage />;
+    return UNDER_CONSTRUCTION ? <UnderConstruction /> : (
+        <Suspense fallback={null}>
+            <ProjectsPage />
+        </Suspense>
+    );
 }
