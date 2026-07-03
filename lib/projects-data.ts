@@ -37,6 +37,18 @@ export const projects: ProjectMeta[] = [
     },
     {
         id: 3,
+        title: "Notify",
+        year: "2025",
+        category: "Web App",
+        description:
+            "A multi-tenant notification delivery platform admin console, the operations surface for a notification-sending backend. Organizations manage projects, configure Email/SMS/Push providers, build message templates, and monitor delivery logs, quotas, and usage.",
+        tech: ["React 19", "TypeScript", "GraphQL", "TanStack Query", "Redux Toolkit", "MUI", "Tiptap", "Mapbox GL"],
+        image: "./notify/notify.png",
+        featured: true,
+        color: "#FF5B3F",
+    },
+    {
+        id: 4,
         title: "MenuRest",
         year: "2026",
         category: "Web App",
@@ -45,16 +57,5 @@ export const projects: ProjectMeta[] = [
         tech: ["Next.js", "Cloudflare"],
         image: "./underconstruction.png",
     },
-    {
-        id: 4,
-        title: "Notify",
-        year: "2025",
-        category: "Web App",
-        description:
-            "Helps companies manage notifications and communication with their customers.",
-        tech: ["React", "GraphQL"],
-        image: "./underconstruction.png",
-        featured: true,
-        color: "#E5523A",
-    },
+
 ];

@@ -297,7 +297,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
               <img
                 src={card.image}
                 alt={card.label}
-                className="w-full h-full object-cover saturate-0 group-hover:saturate-100 transition-[filter] duration-500 ease-out"
+                className="w-full h-full object-cover transition-[filter] duration-500 ease-out"
               />
               <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/50" />
               <div

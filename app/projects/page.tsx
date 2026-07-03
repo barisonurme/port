@@ -136,7 +136,27 @@ const projectContent: Record<number, ReactNode> = {
     ),
     3: (
         <div className="mt-10 space-y-10">
-            <UnderConstruction />
+            <div className="grid grid-cols-2 gap-3">
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                    <Image src="/notify/notify-01.png" alt="Dashboard overview" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
+                </div>
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                    <Image src="/notify/notify-02.png" alt="AI assistant chat" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
+                </div>
+            </div>
+            <div>
+                <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                <ul className="space-y-2 text-white/55 text-sm font-light">
+                    <li>— Built project &amp; provider management: CRUD for projects, per-project Email/SMS/Push provider configuration with quotas and API key generation</li>
+                    <li>— Built a visual, drag-and-drop email template builder on Tiptap a real WYSIWYG editing surface, not just CRUD forms</li>
+                    <li>— Implemented RBAC/team management with project invites, role assignment, and role-gated routing via middleware</li>
+                    <li>— Built filterable, paginated delivery log/audit tooling for message delivery status per project</li>
+                    <li>— Shipped full i18n, OIDC-based auth with token refresh interceptors, and an internal wiki/developer docs surface</li>
+                </ul>
+            </div>
+            <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#FF5B3F" }}>
+                <a href="https://notify.ekinoks.io/" target="_blank" rel="noopener noreferrer">View Live Demo</a>
+            </Button>
         </div>
     ),
     4: (
