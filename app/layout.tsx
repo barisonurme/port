@@ -35,9 +35,6 @@ export default function RootLayout({
       className={cn("dark", "h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", syne.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <header className="fixed top-0 left-0 right-0 z-99999 flex items-center justify-between px-6 py-4 pointer-events-none">
-          <span className="text-sm font-mono tracking-widest uppercase opacity-40">barisonurme</span>
-        </header>
         <TransitionProvider>{children}</TransitionProvider>
       </body>
     </html>
