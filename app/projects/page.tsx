@@ -1,12 +1,13 @@
 "use client";;
-import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import { type ReactNode, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ChevronLeft, ChevronRight, Home, MoveLeft, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, MoveLeft, X, ZoomIn } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { TransitionLink } from "@/components/transition-link";
 import { usePageTransition } from "@/components/transition-provider";
 import { Button } from "@/components/ui/button";
 import { SlideButton } from "@/components/ui/slide-button";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { projects } from "@/lib/projects-data";
 
@@ -190,6 +191,8 @@ function ProjectsPage() {
     const scrollWrapperRef = useRef<HTMLDivElement>(null);
     const heroImgRef = useRef<HTMLDivElement>(null);
     const heroTitleRef = useRef<HTMLDivElement>(null);
+    const magnifierCursorRef = useRef<HTMLDivElement>(null);
+    const magnifierVisibleRef = useRef(false);
 
     const navRef = useRef<HTMLDivElement>(null);
     const activeIdRef = useRef<number | null>(null);
@@ -206,6 +209,13 @@ function ProjectsPage() {
     const nextIndex = nextProject ? projects.indexOf(nextProject) : -1;
 
     useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+
+    useEffect(() => {
+        if (isExpanded && magnifierCursorRef.current) {
+            magnifierVisibleRef.current = false;
+            gsap.to(magnifierCursorRef.current, { opacity: 0, scale: 0.8, duration: 0.2, ease: "power2.in" });
+        }
+    }, [isExpanded]);
 
     useEffect(() => {
         if (isExpanded) return;
@@ -354,6 +364,31 @@ function ProjectsPage() {
             gsap.set(h1El, { opacity: 1 });
         }, 750);
     }
+
+    // Driven off every mousemove (not mouseenter) so the cursor still appears
+    // after a client-side page transition lands with the pointer already over
+    // the page — mouseenter only fires on a boundary crossing, which never
+    // happens in that case.
+    const handleMagnifierMouseMove = useCallback((e: React.MouseEvent) => {
+        const cursor = magnifierCursorRef.current;
+        if (!cursor) return;
+        cursor.style.left = `${e.clientX}px`;
+        cursor.style.top = `${e.clientY}px`;
+
+        const overInteractive = (e.target as HTMLElement).closest('a, button, [role="button"]');
+        const shouldShow = !isExpanded && !overInteractive;
+        if (shouldShow === magnifierVisibleRef.current) return;
+        magnifierVisibleRef.current = shouldShow;
+        gsap.to(cursor, shouldShow
+            ? { opacity: 1, scale: 1, duration: 0.2, ease: "power2.out" }
+            : { opacity: 0, scale: 0.8, duration: 0.2, ease: "power2.in" });
+    }, [isExpanded]);
+
+    const handleMagnifierMouseLeave = useCallback(() => {
+        magnifierVisibleRef.current = false;
+        const cursor = magnifierCursorRef.current;
+        if (cursor) gsap.to(cursor, { opacity: 0, scale: 0.8, duration: 0.2, ease: "power2.in" });
+    }, []);
 
     function open(id: number) {
         if (scrollWrapperRef.current) scrollWrapperRef.current.scrollTop = 0;
@@ -552,8 +587,10 @@ function ProjectsPage() {
 
     return (
         <div
-            className="relative w-full h-screen overflow-hidden bg-zinc-950"
+            className={cn("relative w-full h-screen overflow-hidden bg-zinc-950", !isExpanded && "cursor-none")}
             onClick={() => { if (!isExpanded && displayId != null) open(displayId); }}
+            onMouseMove={handleMagnifierMouseMove}
+            onMouseLeave={handleMagnifierMouseLeave}
         >
             <div className="absolute inset-0 z-0">
                 {projects.map((p) => (
@@ -575,7 +612,7 @@ function ProjectsPage() {
             />
             <TransitionLink
                 href="/"
-                className="absolute top-5 right-5 z-20 flex items-center gap-2 text-white/40 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200"
+                className="absolute top-5 right-5 z-20 flex items-center gap-2 text-white/40 hover:text-white text-sm tracking-widest uppercase transition-colors duration-200 cursor-pointer"
             >
                 <MoveLeft />
                 BACKSPACE
@@ -704,6 +741,15 @@ function ProjectsPage() {
                         {activeProject && projectContent[activeProject.id]}
                     </div>
                 </div>
+            </div>
+
+            {/* Magnifier cursor: hints that the current project can be clicked open */}
+            <div
+                ref={magnifierCursorRef}
+                className="fixed pointer-events-none z-300 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-14 h-14 rounded-full bg-white opacity-0"
+                style={{ top: -100, left: -100 }}
+            >
+                <ZoomIn className="text-zinc-950" size={20} strokeWidth={1.5} />
             </div>
         </div>
     );
