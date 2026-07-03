@@ -100,8 +100,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
     });
 
     if (onActiveChange) {
-      activeIndexRef.current = 0;
-      onActiveChange(0);
+      activeIndexRef.current = -1;
 
       ScrollTrigger.create({
         trigger: container,
@@ -109,6 +108,18 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
         start: "top top",
         end: `+=${Math.max(numCards - 1, 1) * vh}`,
         scrub: true,
+        onEnter: () => {
+          activeIndexRef.current = 0;
+          onActiveChange(0);
+        },
+        onEnterBack: () => {
+          activeIndexRef.current = 0;
+          onActiveChange(0);
+        },
+        onLeaveBack: () => {
+          activeIndexRef.current = -1;
+          onActiveChange(-1);
+        },
         onUpdate: (self) => {
           const idx = numCards > 1 ? Math.round(self.progress * (numCards - 1)) : 0;
           if (idx !== activeIndexRef.current) {

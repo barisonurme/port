@@ -9,7 +9,7 @@ import { StickyProjectParallax } from "@/components/sticky-project-parallax";
 import { projects } from "@/lib/projects-data";
 import Grainient from "@/components/Grainient";
 
-const FALLBACK_COLOR = "#000000";
+const FALLBACK_COLOR = "#FF5B3F";
 
 function hexToRgb(hex: string) {
   const n = parseInt(hex.slice(1), 16);
@@ -21,7 +21,7 @@ function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
 }
 
 const featuredProjects = projects.filter((p) => p.featured);
-const initialColor = featuredProjects[0]?.color ?? FALLBACK_COLOR;
+const initialColor = "#FF5B3F";
 
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);
