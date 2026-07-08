@@ -127,7 +127,9 @@ const projectContent: Record<number, ReactNode> = {
                     <li>— Shipped a guided onboarding flow that personalizes savings goals, check-in frequency, and dashboard focus metrics</li>
                 </ul>
             </div>
-            <Button className='px-4 md:px-12' disabled>Demo will be available soon!</Button>
+            <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#FF5B3F" }}>
+                <a href="https://expense.barisonurme.com/" target="_blank" rel="noopener noreferrer">View Live Demo</a>
+            </Button>
         </div>
     ),
     2: (
