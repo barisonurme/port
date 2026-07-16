@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { MoveLeft } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { submitContact } from '@/lib/contact';
 import { TransitionLink } from '@/components/transition-link';
 import { SlideButton } from '@/components/ui/slide-button';
 
@@ -18,8 +17,8 @@ export default function ContactPage() {
   const [focused, setFocused] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', type: '', message: '' });
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: '', email: '', type: '', message: '', website: '' });
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -47,18 +46,22 @@ export default function ContactPage() {
     e.preventDefault();
     if (sending) return;
     setSending(true);
-    setError(false);
-    try {
-      await addDoc(collection(db, 'contacts'), {
-        ...form,
-        createdAt: serverTimestamp(),
-      });
-    } catch (err) {
-      console.error('[ContactPage] submit failed:', err);
+    setError(null);
+    // Backend v1 only accepts site/name/email/message/website — fold the
+    // project-type selection into the message instead of a "type" field.
+    const message = (form.type ? `Project type: ${form.type}\n\n` : '') + form.message;
+    const result = await submitContact({
+      name: form.name,
+      email: form.email,
+      message: message.slice(0, 5000),
+      website: form.website,
+    });
+    if (!result.ok) {
       setSending(false);
-      setError(true);
+      setError(result.message);
       return;
     }
+    setForm({ name: '', email: '', type: '', message: '', website: '' });
     gsap.to('.c-field', { y: -18, opacity: 0, stagger: 0.05, duration: 0.35, ease: 'power2.in' });
     gsap.to('.c-footer', { opacity: 0, duration: 0.25, delay: 0.1 });
     gsap.to('.c-title-area', { opacity: 0, duration: 0.3, delay: 0.15 });
@@ -145,6 +148,7 @@ export default function ContactPage() {
               <input
                 type="text"
                 required
+                maxLength={100}
                 placeholder="Your full name"
                 value={form.name}
                 onChange={set('name')}
@@ -194,6 +198,7 @@ export default function ContactPage() {
               <textarea
                 rows={3}
                 required
+                maxLength={5000}
                 placeholder="Tell me about your project..."
                 value={form.message}
                 onChange={set('message')}
@@ -204,14 +209,22 @@ export default function ContactPage() {
               />
             </FormField>
 
+            {/* Honeypot — hidden offscreen from humans, bots fill it in */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={form.website}
+              onChange={set('website')}
+              style={{ position: 'absolute', left: '-9999px' }}
+            />
+
             {/* Footer row */}
             <div className="c-footer mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 opacity-0">
               <div className="flex flex-col gap-2">
-                {error && (
-                  <p className="text-red-400/70 text-sm">
-                    Something went wrong. Try again or email me directly.
-                  </p>
-                )}
+                {error && <p className="text-red-400/70 text-sm">{error}</p>}
                 <p className="text-white/25 text-sm">
                   Or reach me at{' '}
                   <a

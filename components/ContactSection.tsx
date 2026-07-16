@@ -5,8 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { ArrowUpRight } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { submitContact } from '@/lib/contact';
 import { SlideButton } from './ui/slide-button';
 
 const PROJECT_TYPES = ['Web Design', 'Development', 'Motion', 'Branding', 'Other'];
@@ -16,8 +15,8 @@ export function ContactSection() {
   const [focused, setFocused] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', type: '', message: '' });
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: '', email: '', type: '', message: '', website: '' });
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger, SplitText);
@@ -105,18 +104,22 @@ export function ContactSection() {
     if (!el || sending) return;
 
     setSending(true);
-    setError(false);
-    try {
-      await addDoc(collection(db, 'contacts'), {
-        ...form,
-        createdAt: serverTimestamp(),
-      });
-    } catch (err) {
-      console.error('[ContactSection] submit failed:', err);
+    setError(null);
+    // Backend v1 only accepts site/name/email/message/website — fold the
+    // project-type selection into the message instead of a "type" field.
+    const message = (form.type ? `Project type: ${form.type}\n\n` : '') + form.message;
+    const result = await submitContact({
+      name: form.name,
+      email: form.email,
+      message: message.slice(0, 5000),
+      website: form.website,
+    });
+    if (!result.ok) {
       setSending(false);
-      setError(true);
+      setError(result.message);
       return;
     }
+    setForm({ name: '', email: '', type: '', message: '', website: '' });
 
     gsap.to(el.querySelectorAll('.cs-field'), { y: -16, opacity: 0, stagger: 0.04, duration: 0.35, ease: 'power2.in' });
     gsap.to(el.querySelector('.cs-footer'), { opacity: 0, duration: 0.25, delay: 0.1 });
@@ -142,7 +145,7 @@ export function ContactSection() {
             <br />
             Recived!
           </h2>
-          <SlideButton className="cs-success-btn" onClick={() => { setSubmitted(false); setSending(false); setForm({ name: '', email: '', type: '', message: '' }); }}>Send Again</SlideButton>
+          <SlideButton className="cs-success-btn" onClick={() => { setSubmitted(false); setSending(false); }}>Send Again</SlideButton>
         </div>
       ) : (
         <>
@@ -178,6 +181,7 @@ export function ContactSection() {
               <input
                 type="text"
                 required
+                maxLength={100}
                 placeholder="Your full name"
                 value={form.name}
                 onChange={set('name')}
@@ -224,6 +228,7 @@ export function ContactSection() {
               <textarea
                 rows={3}
                 required
+                maxLength={5000}
                 placeholder="Tell me about your project..."
                 value={form.message}
                 onChange={set('message')}
@@ -234,12 +239,20 @@ export function ContactSection() {
               />
             </Field>
 
+            {/* Honeypot — hidden offscreen from humans, bots fill it in */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={form.website}
+              onChange={set('website')}
+              style={{ position: 'absolute', left: '-9999px' }}
+            />
+
             <div className="cs-footer mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6" style={{ opacity: 0 }}>
-              {error && (
-                <p className="text-red-400/70 text-sm">
-                  Something went wrong. Try again or email me directly.
-                </p>
-              )}
+              {error && <p className="text-red-400/70 text-sm">{error}</p>}
               <p className="text-white/25 text-sm">
                 Or reach me at{' '}
                 <a
