@@ -8,8 +8,8 @@ import { usePageTransition } from "@/components/transition-provider";
 import { Button } from "@/components/ui/button";
 import { SlideButton } from "@/components/ui/slide-button";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { projects } from "@/lib/projects-data";
+import { ProjectGallery } from "@/components/project-gallery";
 
 const UNDER_CONSTRUCTION = false;
 
@@ -110,14 +110,12 @@ function UnderConstruction() {
 const projectContent: Record<number, ReactNode> = {
     1: (
         <div className="mt-10 space-y-10">
-            <div className="grid grid-cols-2 gap-3">
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src="/expense-ai/expense-ai-2.png" alt="Dashboard overview" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
-                </div>
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src="/expense-ai/expense-ai-3.png" alt="AI assistant chat" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
-                </div>
-            </div>
+            <ProjectGallery
+                images={[
+                    { src: "/expense-ai/expense-ai-2.png", alt: "Dashboard overview" },
+                    { src: "/expense-ai/expense-ai-3.png", alt: "AI assistant chat" },
+                ]}
+            />
             <div>
                 <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
                 <ul className="space-y-2 text-white/55 text-sm font-light">
@@ -127,7 +125,7 @@ const projectContent: Record<number, ReactNode> = {
                     <li>— Shipped a guided onboarding flow that personalizes savings goals, check-in frequency, and dashboard focus metrics</li>
                 </ul>
             </div>
-            <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#FF5B3F" }}>
+            <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#4CD18F" }}>
                 <a href="https://expense.barisonurme.com/" target="_blank" rel="noopener noreferrer">View Live Demo</a>
             </Button>
         </div>
@@ -139,14 +137,12 @@ const projectContent: Record<number, ReactNode> = {
     ),
     3: (
         <div className="mt-10 space-y-10">
-            <div className="grid grid-cols-2 gap-3">
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src="/notify/notify-01.png" alt="Dashboard overview" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
-                </div>
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src="/notify/notify-02.png" alt="AI assistant chat" fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
-                </div>
-            </div>
+            <ProjectGallery
+                images={[
+                    { src: "/notify/notify-01.png", alt: "Dashboard overview" },
+                    { src: "/notify/notify-02.png", alt: "Delivery logs" },
+                ]}
+            />
             <div>
                 <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
                 <ul className="space-y-2 text-white/55 text-sm font-light">
@@ -668,11 +664,13 @@ function ProjectsPage() {
             >
                 <div className="absolute inset-0 bg-zinc-950" />
                 <Button
-                    variant='ghost'
+                    variant="ghost"
                     onClick={close}
-                    className="absolute top-2 right-2 z-20text-sm tracking-widest uppercase transition-colors duration-200 z-9999"
+                    size="icon-sm"
+                    className="text-white/60 hover:text-white duration-200 z-9999 absolute right-2 top-2"
                 >
                     <X />
+                    <span className="sr-only">Close</span>
                 </Button>
                 <div ref={navRef} className="absolute bottom-10 right-0 w-full justify-center  md:justify-end md:right-10 z-20 flex items-center gap-6 opacity-0">
                     {prevProject && (
@@ -753,7 +751,7 @@ function ProjectsPage() {
             >
                 <ZoomIn className="text-zinc-950" size={20} strokeWidth={1.5} />
             </div>
-        </div>
+        </div >
     );
 }
 
