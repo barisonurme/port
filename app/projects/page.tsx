@@ -150,7 +150,7 @@ const projectContent: Record<number, ReactNode> = {
                 </ul>
             </div>
             <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#007AFF" }}>
-                <a href="https://expense.barisonurme.com/" target="_blank" rel="noopener noreferrer">View Landing Page</a>
+                <a href="https://fitlog.barisonurme.com/" target="_blank" rel="noopener noreferrer">View Landing Page</a>
             </Button>
         </div>
     ),
