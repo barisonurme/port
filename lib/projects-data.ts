@@ -27,12 +27,12 @@ export const projects: ProjectMeta[] = [
     },
     {
         id: 2,
-        title: "FitSmart",
+        title: "FitLog",
         year: "2026",
         category: "Smart Devices",
         description:
-            "Exercise tracking app with AI-powered workout recommendations.",
-        tech: ["Swift", "WatchOS", "TensorFlow", "AWS"],
+            "An iOS + Apple Watch workout companion that automatically detects and counts reps from wrist motion using Core Motion templates. Features a muscle heat map to visualize training coverage, workout history syncing between iPhone and Watch, and a built-in AI coach for personalized fitness guidance.",
+        tech: ["Swift", "SwiftUI", "watchOS", "Core Motion", "WatchConnectivity"],
         image: "./underconstruction.png",
     },
     {

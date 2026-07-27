@@ -112,10 +112,11 @@ const projectContent: Record<number, ReactNode> = {
         <div className="mt-10 space-y-10">
             <ProjectGallery
                 images={[
-                    { src: "/expense-ai/expense-ai-2.png", alt: "Dashboard overview" },
-                    { src: "/expense-ai/expense-ai-3.png", alt: "AI assistant chat" },
+                    { src: "/fit-log/fit-log-2.png", alt: "Screens" },
+                    { src: "/fit-log/fit-log-3.png", alt: "Screen Details" },
                 ]}
             />
+
             <div>
                 <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
                 <ul className="space-y-2 text-white/55 text-sm font-light">
@@ -132,7 +133,17 @@ const projectContent: Record<number, ReactNode> = {
     ),
     2: (
         <div className="mt-10 space-y-10">
-            <UnderConstruction />
+            {/* Add ProjectGallery here once you have screenshots, e.g. /fitlog/fitlog-01.png */}
+            <div>
+                <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                <ul className="space-y-2 text-white/55 text-sm font-light">
+                    <li>— Built on-device rep detection on watchOS with Core Motion: gravity-vector and rotation features classify the exercise, and a peak/valley detector with prominence thresholds counts reps while rejecting jitter</li>
+                    <li>— Designed a pluggable exercise-profile system — adding a new exercise is a single profile entry plus a recorded motion template CSV, no detector code changes</li>
+                    <li>— Made classification robust with per-session frame voting, so a brief misclassification flicker can&apos;t outvote the exercise actually being performed</li>
+                    <li>— Built a muscle heat map on iPhone that visualizes training coverage from workout history synced via WatchConnectivity</li>
+                    <li>— Shipped an AI coach chat backed by Claude through a server-side relay, with cookie-based session auth shared across the app&apos;s services</li>
+                </ul>
+            </div>
         </div>
     ),
     3: (
