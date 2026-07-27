@@ -33,7 +33,9 @@ export const projects: ProjectMeta[] = [
         description:
             "An iOS + Apple Watch workout companion that automatically detects and counts reps from wrist motion using Core Motion templates. Features a muscle heat map to visualize training coverage, workout history syncing between iPhone and Watch, and a built-in AI coach for personalized fitness guidance.",
         tech: ["Swift", "SwiftUI", "watchOS", "Core Motion", "WatchConnectivity"],
-        image: "./underconstruction.png",
+        image: "/fit-log/fit-log.png",
+        featured: true,
+        color: "#007AFF",
     },
     {
         id: 3,

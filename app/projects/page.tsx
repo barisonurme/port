@@ -133,7 +133,12 @@ const projectContent: Record<number, ReactNode> = {
     ),
     2: (
         <div className="mt-10 space-y-10">
-            {/* Add ProjectGallery here once you have screenshots, e.g. /fitlog/fitlog-01.png */}
+            <ProjectGallery
+                images={[
+                    { src: "/fit-log/fit-log-2.png", alt: "Screens" },
+                    { src: "/fit-log/fit-log-3.png", alt: "Screen Details" },
+                ]}
+            />
             <div>
                 <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
                 <ul className="space-y-2 text-white/55 text-sm font-light">
