@@ -112,8 +112,8 @@ const projectContent: Record<number, ReactNode> = {
         <div className="mt-10 space-y-10">
             <ProjectGallery
                 images={[
-                    { src: "/fit-log/fit-log-2.png", alt: "Screens" },
-                    { src: "/fit-log/fit-log-3.png", alt: "Screen Details" },
+                    { src: "/expense-ai/expense-ai-2.png", alt: "Screens" },
+                    { src: "/expense-ai/expense-ai-3.png", alt: "Screen Details" },
                 ]}
             />
 
