@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { cn } from '@/lib/utils'
+import { ScrollProgress } from '@/components/scroll-progress'
 
 const TransitionContext = createContext<(href: string) => void>(() => { })
 
@@ -223,6 +224,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         <span className="text-sm font-mono tracking-widest uppercase opacity-40">barisonurme</span>
       </header>
       {children}
+      {/* Sits below the strips (z 9999) so page transitions and the initial
+          loading screen cover it without needing their own hide logic. */}
+      <ScrollProgress />
       <div
         ref={stripsRef}
         className="fixed inset-0 pointer-events-none overflow-hidden"

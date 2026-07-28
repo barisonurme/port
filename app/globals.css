@@ -124,6 +124,21 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Scrollbars are hidden everywhere — page-level and inside any nested
+     scroller. The native bar is an OS-drawn element that can't be art
+     directed, and it fights the smooth scroll + custom cursor. Scrolling
+     itself is untouched: wheel, trackpad, touch, keyboard and programmatic
+     scrollTo all still work. `overflow: hidden` would NOT be equivalent —
+     it kills those. Position in the document comes from the progress bar
+     in components/scroll-progress.tsx instead. */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* legacy Edge */
+  }
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 }
 
 /* Initial-load text fill (see components/transition-provider.tsx). Runs as
