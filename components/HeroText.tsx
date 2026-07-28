@@ -91,7 +91,7 @@ export default function HeroText() {
         style={{ transformStyle: 'preserve-3d' }}
       >
         <h1 className="text-4xl md:text-6xl! font-bold">Creative Developer</h1>
-        <h4 className="text-2xl! opacity-50">Where ideas come to life with magic touch</h4>
+        <h4 className="text-2xl! opacity-50">Turning ideas into experiences you can feel</h4>
 
         <div className="flex gap-4 mt-4">
           <SlideButton
