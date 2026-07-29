@@ -202,3 +202,133 @@
 .animate-heartbeat {
   animation: heartbeat 1.1s ease-in-out infinite;
 }
+
+/* ── /cv print stylesheet ───────────────────────────────────────────────────
+   The CV route is dark on screen but has to leave the printer as a normal
+   black-on-white résumé, so printing inverts the palette rather than
+   burning a full-bleed dark background onto the page. `Download PDF` on the
+   page is just window.print() — this block is what makes that output an
+   A4-shaped document instead of a screenshot of the site. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 12mm;
+  }
+
+  /* Everything outside the CV — site header, scroll progress, transition
+     strips — is chrome that has no meaning on paper. */
+  body > *:not(.cv-root) {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .cv-root,
+  .cv-root * {
+    background: transparent !important;
+    color: #111 !important;
+    border-color: rgba(0, 0, 0, 0.18) !important;
+    opacity: 1 !important;
+    /* GSAP leaves inline transforms from the entrance animation behind. */
+    transform: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+  }
+
+  .cv-root {
+    min-height: 0 !important;
+  }
+
+  .cv-grain,
+  .cv-no-print {
+    display: none !important;
+  }
+
+  .cv-sheet {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Screen sizes are vw-based clamps; on paper they need fixed points. */
+  .cv-name,
+  .cv-role {
+    font-size: 26pt !important;
+    line-height: 1.05 !important;
+    -webkit-text-stroke: 0 !important;
+  }
+  .cv-role {
+    color: #111 !important;
+  }
+
+  .cv-sheet header {
+    margin-bottom: 7mm !important;
+  }
+
+  /* Two columns, same split as on screen — lg: never matches in print. */
+  .cv-grid {
+    display: grid !important;
+    grid-template-columns: 1.85fr 1fr !important;
+    column-gap: 10mm !important;
+    row-gap: 7mm !important;
+  }
+
+  .cv-heading {
+    padding-bottom: 1.5mm !important;
+    margin-bottom: 3.5mm !important;
+  }
+
+  .cv-body,
+  .cv-link,
+  .cv-skills li {
+    font-size: 8.2pt !important;
+    line-height: 1.45 !important;
+    max-width: none !important;
+  }
+
+  .cv-faint,
+  .cv-dim {
+    color: #555 !important;
+  }
+
+  .cv-faint {
+    font-size: 7.2pt !important;
+  }
+
+  .cv-job {
+    font-size: 11pt !important;
+    margin-bottom: 2mm !important;
+  }
+
+  /* Screen vertical rhythm is rem-based and far too airy at print scale —
+     collapse every stack to millimetres so the whole CV lands on one sheet. */
+  .cv-col {
+    gap: 7mm !important;
+  }
+  .cv-stack > * + * {
+    margin-top: 2.5mm !important;
+  }
+  .cv-jobs {
+    margin-top: 5mm !important;
+  }
+  .cv-jobs > * + * {
+    margin-top: 5mm !important;
+  }
+  .cv-skills {
+    row-gap: 1.2mm !important;
+    column-gap: 4mm !important;
+  }
+
+  /* Keep a job or a degree from splitting across the page break. */
+  .cv-root article,
+  .cv-root section > div > div {
+    break-inside: avoid;
+  }
+
+  .cv-root a {
+    text-decoration: none !important;
+  }
+}

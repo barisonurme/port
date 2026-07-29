@@ -1,11 +1,10 @@
-'use client';
-
+'use client';;
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { MoveLeft } from 'lucide-react';
 import { submitContact } from '@/lib/contact';
 import { TransitionLink } from '@/components/transition-link';
 import { SlideButton } from '@/components/ui/slide-button';
+import { OutlineText } from '@/components/ui/outline-text';
 
 const PROJECT_TYPES = ['Web Design', 'Development', 'Motion', 'Branding', 'Other'];
 
@@ -80,22 +79,9 @@ export default function ContactPage() {
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.035]"
         style={{ backgroundImage: GRAIN_SVG }}
       />
-
-      {/* Top nav */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-10 sm:px-16 pt-8">
-        <TransitionLink
-          href="/"
-          className="flex items-center gap-2 text-white/40 hover:text-white text-xs tracking-widest uppercase transition-colors duration-200"
-        >
-          <MoveLeft size={14} />
-          BACKSPACE
-        </TransitionLink>
-        <span className="c-meta text-white/20 text-xs tracking-widest opacity-0">CONTACT / 2026</span>
-      </nav>
-
       {submitted ? (
         /* ── Success state ───────────────────────── */
-        <div className="flex flex-col items-center justify-center min-h-screen text-center px-10">
+        (<div className="flex flex-col items-center justify-center min-h-screen text-center px-10">
           <p className="text-white/25 text-xs uppercase tracking-widest mb-8">Talk Soon</p>
           <h2
             className="font-bold text-white leading-none mb-10"
@@ -111,10 +97,10 @@ export default function ContactPage() {
           >
             ← Back home
           </TransitionLink>
-        </div>
+        </div>)
       ) : (
         /* ── Form ────────────────────────────────── */
-        <div className="px-10 sm:px-16 pt-28 pb-28">
+        (<div className="px-10 sm:px-16 pt-28 pb-28">
           {/* Title */}
           <div className="c-title-area mb-14">
             <p className="c-meta text-white/25 text-xs uppercase tracking-widest mb-5 opacity-0">
@@ -122,26 +108,24 @@ export default function ContactPage() {
             </p>
             <div className="overflow-hidden leading-none">
               <h1
-                className="c-word inline-block font-bold text-white"
+                className="c-word inline-block font-semibold text-white"
                 style={{ fontSize: 'clamp(3.2rem, 11vw, 10rem)' }}
               >
                 GET IN
               </h1>
             </div>
             <div className="overflow-hidden leading-none">
+              {/* Masked outline — see components/ui/outline-text.tsx for why
+                  -webkit-text-stroke isn't used here. */}
               <h1
-                className="c-word inline-block font-bold"
-                style={{
-                  fontSize: 'clamp(3.2rem, 11vw, 10rem)',
-                  WebkitTextStroke: '1.5px rgba(255,255,255,0.2)',
-                  color: 'transparent',
-                }}
+                className="c-word block font-semibold"
+                style={{ fontSize: 'clamp(3.2rem, 11vw, 10rem)' }}
               >
-                TOUCH.
+                <span className="sr-only">TOUCH.</span>
+                <OutlineText>TOUCH.</OutlineText>
               </h1>
             </div>
           </div>
-
           <form onSubmit={handleSubmit} className="max-w-4xl">
             {/* 01 Name */}
             <FormField label="Full Name" index="01" focused={focused === 'name'} className="c-field">
@@ -242,7 +226,7 @@ export default function ContactPage() {
               </SlideButton>
             </div>
           </form>
-        </div>
+        </div>)
       )}
     </div>
   );

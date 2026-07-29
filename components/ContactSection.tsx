@@ -7,6 +7,7 @@ import { SplitText } from 'gsap/SplitText';
 import { ArrowUpRight } from 'lucide-react';
 import { submitContact } from '@/lib/contact';
 import { SlideButton } from './ui/slide-button';
+import { OutlineText } from './ui/outline-text';
 
 const PROJECT_TYPES = ['Web Design', 'Development', 'Motion', 'Branding', 'Other'];
 
@@ -156,22 +157,22 @@ export function ContactSection() {
             </p>
             <div className="overflow-hidden leading-none">
               <h2
-                className="cs-word inline-block font-bold text-white"
+                className="cs-word inline-block font-semibold text-white"
                 style={{ fontSize: 'clamp(3.2rem, 11vw, 10rem)' }}
               >
                 GET IN
               </h2>
             </div>
             <div className="overflow-hidden leading-none">
+              {/* Masked outline (see OutlineText) — this sits over the
+                  animated gradient, so the counters have to stay genuinely
+                  transparent. */}
               <h2
-                className="cs-word inline-block font-bold"
-                style={{
-                  fontSize: 'clamp(3.2rem, 11vw, 10rem)',
-                  WebkitTextStroke: '1.5px rgba(255,255,255,0.2)',
-                  color: 'transparent',
-                }}
+                className="cs-word block font-semibold"
+                style={{ fontSize: 'clamp(3.2rem, 11vw, 10rem)' }}
               >
-                TOUCH.
+                <span className="sr-only">TOUCH.</span>
+                <OutlineText>TOUCH.</OutlineText>
               </h2>
             </div>
           </div>
