@@ -56,7 +56,7 @@ export const projects: ProjectMeta[] = [
         category: "Web Application",
         description:
             "A web-based camera management and video surveillance dashboard for edge recording devices. Delivers low-latency live streaming over WebRTC with an HLS fallback, timeline-driven playback with zoom and GPS trail visualization on a map, and full device configuration — camera discovery, network, storage, and user roles. Built as a fully responsive SPA with dark/light theming and multi-language support including RTL.",
-        tech: ["React 19", "TypeScript", "Vite", "Tailwind CSS", "LiveKit", "HLS.js", "TanStack Query"],
+        tech: ["React 19", "TypeScript", "Vite", "Tailwind CSS", "WebRTC", "HLS.js", "TanStack Query"],
         image: "/stream-iq/cover.png",
         featured: true,
         color: "#F39E0A",
