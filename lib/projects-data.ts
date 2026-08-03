@@ -51,13 +51,15 @@ export const projects: ProjectMeta[] = [
     },
     {
         id: 4,
-        title: "MenuRest",
+        title: "StreamIQ",
         year: "2026",
-        category: "Web App",
+        category: "Web Application",
         description:
-            "Helps restaurants manage inventory and reduce food waste by tracking ingredients, predicting demand, and suggesting recipes.",
-        tech: ["Next.js", "Cloudflare"],
-        image: "./underconstruction.png",
-    },
+            "A web-based camera management and video surveillance dashboard for edge recording devices. Delivers low-latency live streaming over WebRTC with an HLS fallback, timeline-driven playback with zoom and GPS trail visualization on a map, and full device configuration — camera discovery, network, storage, and user roles. Built as a fully responsive SPA with dark/light theming and multi-language support including RTL.",
+        tech: ["React 19", "TypeScript", "Vite", "Tailwind CSS", "LiveKit", "HLS.js", "TanStack Query"],
+        image: "/stream-iq/cover.png",
+        featured: true,
+        color: "#F39E0A",
+    }
 
 ];

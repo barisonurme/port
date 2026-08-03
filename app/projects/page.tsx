@@ -179,8 +179,22 @@ const projectContent: Record<number, ReactNode> = {
     ),
     4: (
         <div className="mt-10 space-y-10">
-            <UnderConstruction />
+            <div>
+                <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                <ul className="space-y-2 text-white/55 text-sm font-light">
+                    <li>— Built a multi-camera live wall where each tile negotiates a WebRTC stream through LiveKit and transparently falls back to HLS per camera, with AI detection and motion overlays composited on top of the video surface</li>
+                    <li>— Implemented timeline-driven playback — range-slider scrubbing, zoom, and subtitle/telemetry overlays kept in sync with the player clock, alongside a Leaflet map that draws the recording&apos;s GPS trail</li>
+                    <li>— Wrote a singleton SSE layer that multiplexes one server connection across every subscriber and reconnects with exponential backoff capped at 30s, so camera status, disk, and upload events stay live without a connection per component</li>
+                    <li>— Made RBAC declarative with a permission context plus <code>WithPermission</code> and <code>ProtectedRoute</code> wrappers, so access rules live next to the UI they gate instead of scattered conditionals</li>
+                    <li>— Generated the entire API client from the backend&apos;s OpenAPI spec and wrapped it in typed TanStack Query hooks with centralized query keys, keeping cache invalidation predictable across ~10 feature areas</li>
+                    <li>— Shipped EN/TR/AR localization with a direction hook that flips the app to RTL at runtime, on top of a dark/light theme system</li>
+                </ul>
+            </div>
+            <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#F39E0A" }}>
+                <a href="https://getstreamiq.com/" target="_blank" rel="noopener noreferrer">View Landing Page</a>
+            </Button>
         </div>
+
     ),
 };
 
