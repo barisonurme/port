@@ -69,7 +69,7 @@ export default function Home() {
       </div>
 
       <footer className="relative z-999 w-full py-6 flex justify-center">
-        <span className="text-sm opacity-30 tracking-widest uppercase font-mono">
+        <span className="text-sm opacity-60 tracking-widest uppercase font-mono">
           barisonurme &mdash; 2026
         </span>
       </footer>

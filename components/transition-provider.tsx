@@ -231,7 +231,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
           onClick={() => navigate('/')}
           aria-label="Home"
           className={cn(
-            'text-sm font-mono tracking-widest uppercase opacity-40 transition-opacity duration-300',
+            'text-sm font-mono tracking-widest uppercase opacity-65 transition-opacity duration-300',
             pathname !== '/' && 'pointer-events-auto cursor-pointer hover:opacity-100'
           )}
         >

@@ -141,6 +141,17 @@
   }
 }
 
+/* Scroll-reveal from-state.
+   Elements that gsap animates in used to ship with an inline `opacity: 0`,
+   which meant the server-rendered HTML was invisible *by construction*: if
+   the bundle never ran, the whole contact section stayed at zero forever.
+   The hidden state now hangs off the `js` flag that the inline script in
+   app/layout.tsx puts on <html> before first paint, so the content is
+   visible by default and JS only opts into animating it. */
+.js [data-reveal] {
+  opacity: 0;
+}
+
 /* Initial-load text fill (see components/transition-provider.tsx). Runs as
    pure CSS so it plays the instant the browser paints the server-rendered
    HTML, before the JS bundle has downloaded or React has hydrated. The

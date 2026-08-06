@@ -90,8 +90,16 @@ export default function HeroText() {
         className="flex flex-col items-center gap-2 will-change-transform"
         style={{ transformStyle: 'preserve-3d' }}
       >
-        <h1 className="text-4xl md:text-6xl! font-bold">Creative Developer</h1>
-        <h4 className="text-2xl! opacity-50">Turning ideas into experiences you can feel</h4>
+        {/* The hero sits directly on the animated gradient, whose bright band
+            is only ~3:1 against white. The shadow buys back the contrast the
+            gradient takes away, and the tagline is a <p>, not an <h4> — it's
+            a subtitle, not the next level of the document outline. */}
+        <h1 className="text-4xl md:text-6xl! font-bold text-white [text-shadow:0_2px_20px_rgba(0,0,0,0.55)]">
+          Creative Developer
+        </h1>
+        <p className="text-2xl! text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.65)]">
+          Turning ideas into experiences you can feel
+        </p>
 
         <div className="flex gap-4 mt-4">
           <SlideButton
@@ -112,7 +120,7 @@ export default function HeroText() {
         </div>
       </div>
 
-      <div ref={arrowRef} className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/40">
+      <div ref={arrowRef} className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/65">
         <ArrowDown size={48} strokeWidth={1.25} />
       </div>
     </div>

@@ -136,8 +136,8 @@ export function ContactSection() {
   return (
     <section id="contact" ref={ref} className=" px-10 sm:px-16 py-28">
       {submitted ? (
-        <div key="success" className="cs-success flex flex-col items-center justify-center min-h-[60vh] text-center" style={{ opacity: 0 }}>
-          <p className="cs-success-sub text-white/25 text-xs uppercase tracking-widest mb-8">Talk to you soon!</p>
+        <div key="success" data-reveal className="cs-success flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <p className="cs-success-sub text-white/55 text-xs uppercase tracking-widest mb-8">Talk to you soon!</p>
           <h2
             className="cs-success-title font-bold text-white leading-none mb-10"
             style={{ fontSize: 'clamp(4rem, 13vw, 10rem)' }}
@@ -150,9 +150,10 @@ export function ContactSection() {
         </div>
       ) : (
         <>
-          {/* Title — starts invisible; GSAP sets from-state on mount */}
-          <div className="cs-title mb-14" style={{ opacity: 0 }}>
-            <p className="cs-meta text-white/25 text-xs uppercase tracking-widest mb-5">
+          {/* Title — GSAP sets the from-state on mount; `data-reveal` only
+              pre-hides it when scripting is actually available. */}
+          <div data-reveal className="cs-title mb-14">
+            <p className="cs-meta text-white/55 text-xs uppercase tracking-widest mb-5">
               Let&apos;s work together
             </p>
             <div className="overflow-hidden leading-none">
@@ -188,7 +189,7 @@ export function ContactSection() {
                 onChange={set('name')}
                 onFocus={() => setFocused('name')}
                 onBlur={() => setFocused(null)}
-                className="w-full bg-transparent text-white font-light outline-none placeholder:text-white/15"
+                className="w-full bg-transparent text-white font-light outline-none placeholder:text-white/50"
                 style={{ fontSize: 'clamp(1.4rem, 3vw, 2.6rem)' }}
               />
             </Field>
@@ -202,7 +203,7 @@ export function ContactSection() {
                 onChange={set('email')}
                 onFocus={() => setFocused('email')}
                 onBlur={() => setFocused(null)}
-                className="w-full bg-transparent text-white font-light outline-none placeholder:text-white/15"
+                className="w-full bg-transparent text-white font-light outline-none placeholder:text-white/50"
                 style={{ fontSize: 'clamp(1.4rem, 3vw, 2.6rem)' }}
               />
             </Field>
@@ -216,7 +217,7 @@ export function ContactSection() {
                     onClick={() => setForm(f => ({ ...f, type }))}
                     className={`px-5 py-2 rounded-full text-xs uppercase tracking-widest transition-all duration-300 border cursor-pointer ${form.type === type
                       ? 'bg-white text-zinc-950 border-white'
-                      : 'bg-transparent text-white/35 border-white/12 hover:border-white/35 hover:text-white/60'
+                      : 'bg-transparent text-white/60 border-white/25 hover:border-white/60 hover:text-white'
                       }`}
                   >
                     {type}
@@ -235,7 +236,7 @@ export function ContactSection() {
                 onChange={set('message')}
                 onFocus={() => setFocused('message')}
                 onBlur={() => setFocused(null)}
-                className="w-full bg-transparent text-white font-light outline-none placeholder:text-white/15 resize-none"
+                className="w-full bg-transparent text-white font-light outline-none placeholder:text-white/50 resize-none"
                 style={{ fontSize: 'clamp(1.4rem, 3vw, 2.6rem)' }}
               />
             </Field>
@@ -252,13 +253,13 @@ export function ContactSection() {
               style={{ position: 'absolute', left: '-9999px' }}
             />
 
-            <div className="cs-footer mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6" style={{ opacity: 0 }}>
-              {error && <p className="text-red-400/70 text-sm">{error}</p>}
-              <p className="text-white/25 text-sm">
+            <div data-reveal className="cs-footer mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              {error && <p className="text-red-400 text-sm">{error}</p>}
+              <p className="text-white/55 text-sm">
                 Or reach me at{' '}
                 <a
                   href="mailto:brsnrm@gmail.com"
-                  className="text-white/45 hover:text-white transition-colors duration-200 underline underline-offset-4 decoration-white/20 hover:decoration-white/50"
+                  className="text-white/80 hover:text-white transition-colors duration-200 underline underline-offset-4 decoration-white/40 hover:decoration-white"
                 >
                   brsnrm@gmail.com
                 </a>
@@ -298,9 +299,9 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={`relative py-9 ${className ?? ''}`} style={{ opacity: 0 }}>
+    <div data-reveal className={`relative py-9 ${className ?? ''}`}>
       <div
-        className={`flex items-baseline gap-5 mb-5 transition-opacity duration-300 ${focused ? 'opacity-100' : 'opacity-40'
+        className={`flex items-baseline gap-5 mb-5 transition-opacity duration-300 ${focused ? 'opacity-100' : 'opacity-65'
           }`}
       >
         <span className="text-white text-xs font-mono tabular-nums">{index}</span>
