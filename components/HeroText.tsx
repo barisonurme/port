@@ -1,15 +1,29 @@
 'use client';;
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowDown } from 'lucide-react';
 import { TransitionLink } from '@/components/transition-link';
 import { SlideButton } from './ui/slide-button';
+import WarpText from './WarpText';
 
 export default function HeroText() {
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLDivElement>(null);
+  // Below lg the headline breaks onto two lines. WarpText rasterizes to a
+  // canvas, so this can't be a CSS wrap — the string itself has to carry the
+  // newline. Starts false so SSR and the first client render agree.
+  const [stacked, setStacked] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1023px)');
+    const sync = () => setStacked(query.matches);
+
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -85,20 +99,48 @@ export default function HeroText() {
       className="z-99999 flex flex-col justify-center items-center absolute top-0 left-0 w-full h-screen text-center will-change-transform"
       style={{ transformStyle: 'preserve-3d' }}
     >
+
       <div
         ref={innerRef}
-        className="flex flex-col items-center gap-2 will-change-transform"
+        className="flex flex-col items-center gap-2 will-change-transform w-full"
         style={{ transformStyle: 'preserve-3d' }}
       >
         {/* The hero sits directly on the animated gradient, whose bright band
             is only ~3:1 against white. The shadow buys back the contrast the
             gradient takes away, and the tagline is a <p>, not an <h4> — it's
             a subtitle, not the next level of the document outline. */}
-        <h1 className="text-4xl md:text-6xl! font-bold text-white [text-shadow:0_2px_20px_rgba(0,0,0,0.55)]">
-          Creative Developer
-        </h1>
-        <p className="text-2xl! text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.65)]">
-          Turning ideas into experiences you can feel
+
+        {/* The wrapper owns the height; WarpText fills it. Its canvas is
+            rasterized from the container's box and the glyphs are then fit
+            into 78% of it, so each height tracks the font it has to hold:
+            stacked is 2 lines x 0.9 line-height / 0.78 against the same vw as
+            the font, wide is one line against vh so short widescreens don't
+            hand the hero a band of empty canvas. Give it less and the fit
+            pass just shrinks the text instead. */}
+        <div className={`flex w-full max-w-6xl ${stacked ? 'h-[clamp(3rem,13.7vw,16.7rem)]' : 'h-[clamp(1rem,13vh,9rem)]'}`}>
+
+          <WarpText
+            text={stacked ? 'Building & Shipping\nSoftware' : 'Building & Shipping Software'}
+            warpStrength={15}
+            warpScale={7}
+            speed={1}
+            pointerInfluence={0.5}
+            pointerStrength={0.5}
+            refraction={0.058}
+            ripple
+            fontSize="clamp(2.25rem, 12vw, 7.25rem)"
+            fontWeight={600}
+            style={{ minHeight: 0, height: '100%' }}
+            letterSpacing="-0.06em"
+            lineHeight={0.9}
+          />
+        </div>
+
+        {/* Reads as one sentence continuing out of the headline above, so the
+            lowercase start and the missing period are deliberate: the thought
+            closes on "end to end", not here. */}
+        <p className="text-xl! sm:text-2xl! text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.65)]">
+          that people can actually feel, fullstack and end to end
         </p>
 
         <div className="flex gap-4 mt-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { EnterKeyNav } from "@/components/enter-key-nav";
 import HeroText from "@/components/HeroText";
@@ -10,6 +10,12 @@ import { projects } from "@/lib/projects-data";
 import Grainient from "@/components/Grainient";
 
 const FALLBACK_COLOR = "#FF5B3F";
+
+/** Colors the background drifts through while no project is active. */
+const IDLE_PALETTE = ["#FF5B3F", "#4CD18F", "#007AFF", "#F39E0A", "#B14CFF"];
+/** Seconds held on a color before fading, and the fade itself. */
+const IDLE_HOLD = 2.5;
+const IDLE_FADE = 3;
 
 function hexToRgb(hex: string) {
   const n = parseInt(hex.slice(1), 16);
@@ -26,16 +32,54 @@ const initialColor = "#FF5B3F";
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);
   const colorRef = useRef(hexToRgb(initialColor));
+  const idleRef = useRef<gsap.core.Timeline | null>(null);
 
-  const handleActiveChange = useCallback((index: number) => {
-    const target = hexToRgb(featuredProjects[index]?.color ?? FALLBACK_COLOR);
-    gsap.to(colorRef.current, {
-      ...target,
-      duration: 0.6,
-      ease: "power2.out",
-      onUpdate: () => setBgColor(rgbToHex(colorRef.current)),
+  const applyColor = useCallback(() => setBgColor(rgbToHex(colorRef.current)), []);
+
+  // Slow ambient drift through the palette — runs whenever no project owns the background.
+  const startIdle = useCallback(() => {
+    if (idleRef.current) return;
+    gsap.killTweensOf(colorRef.current);
+    // repeatRefresh re-records the start values each loop, so the cycle never jumps.
+    const tl = gsap.timeline({ repeat: -1, repeatRefresh: true });
+    IDLE_PALETTE.forEach((hex) => {
+      tl.to(
+        colorRef.current,
+        { ...hexToRgb(hex), duration: IDLE_FADE, ease: "sine.inOut", onUpdate: applyColor },
+        `+=${IDLE_HOLD}`
+      );
     });
+    idleRef.current = tl;
+  }, [applyColor]);
+
+  const stopIdle = useCallback(() => {
+    idleRef.current?.kill();
+    idleRef.current = null;
   }, []);
+
+  const handleActiveChange = useCallback(
+    (index: number) => {
+      const project = featuredProjects[index];
+      if (!project) {
+        startIdle();
+        return;
+      }
+      stopIdle();
+      gsap.killTweensOf(colorRef.current);
+      gsap.to(colorRef.current, {
+        ...hexToRgb(project.color ?? FALLBACK_COLOR),
+        duration: 0.6,
+        ease: "power2.out",
+        onUpdate: applyColor,
+      });
+    },
+    [applyColor, startIdle, stopIdle]
+  );
+
+  useEffect(() => {
+    startIdle();
+    return stopIdle;
+  }, [startIdle, stopIdle]);
 
   return (
     <main className="relative">

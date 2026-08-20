@@ -35,7 +35,10 @@ export type CARDS = {
 }[]
 
 
-export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CARDS: CARDS; scroller?: { current: HTMLElement | null }; onActiveChange?: (index: number) => void }) {
+/** How far ahead of the card animation the active-index tracking runs, in viewport heights. */
+const ACTIVE_LEAD_VH = 0.75;
+
+export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeLead = ACTIVE_LEAD_VH }: { CARDS: CARDS; scroller?: { current: HTMLElement | null }; onActiveChange?: (index: number) => void; activeLead?: number }) {
   const navigate = usePageTransition();
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -102,12 +105,14 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
     if (onActiveChange) {
       activeIndexRef.current = -1;
 
+      // Lead-in: only the first card claims the background early, before the
+      // section reaches the top of the viewport. Later indices stay in sync
+      // with their card animation.
       ScrollTrigger.create({
         trigger: container,
         scroller: scrollerEl,
-        start: "top top",
-        end: `+=${Math.max(numCards - 1, 1) * vh}`,
-        scrub: true,
+        start: `top-=${vh * activeLead}px top`,
+        end: "top top",
         onEnter: () => {
           activeIndexRef.current = 0;
           onActiveChange(0);
@@ -119,6 +124,25 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
         onLeaveBack: () => {
           activeIndexRef.current = -1;
           onActiveChange(-1);
+        },
+      });
+
+      ScrollTrigger.create({
+        trigger: container,
+        scroller: scrollerEl,
+        start: "top top",
+        end: `+=${Math.max(numCards - 1, 1) * vh}`,
+        scrub: true,
+        // Past the last card the background is free again — hand it back
+        // to the idle cycle, and reclaim it when scrolling back in.
+        onLeave: () => {
+          activeIndexRef.current = -1;
+          onActiveChange(-1);
+        },
+        onEnterBack: () => {
+          const idx = numCards - 1;
+          activeIndexRef.current = idx;
+          onActiveChange(idx);
         },
         onUpdate: (self) => {
           const idx = numCards > 1 ? Math.round(self.progress * (numCards - 1)) : 0;
@@ -132,7 +156,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange }: { CAR
 
     return () => ScrollTrigger.getAll().forEach((t) => t.kill());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scroller]);
+  }, [scroller, activeLead]);
 
   const openCard = useCallback((index: number) => {
     const href = CARDS[index]?.href;
