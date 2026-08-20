@@ -119,6 +119,9 @@ export default function Home() {
           id: p.id,
           image: p.image,
           label: p.title,
+          description: p.description,
+          year: p.year,
+          category: p.category,
           href: `/projects?open=${p.id}`,
         }))}
         onActiveChange={handleActiveChange}

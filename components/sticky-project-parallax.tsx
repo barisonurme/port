@@ -30,6 +30,9 @@ export type CARDS = {
   id: number;
   image: string;
   label: string;
+  description?: string;
+  year?: string;
+  category?: string;
   /** When set, clicking the card navigates here instead of opening the lightbox. */
   href?: string;
 }[]
@@ -98,6 +101,39 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
             end: `top+=${(i + 1) * vh}px top`,
             scrub: true,
           },
+        });
+      }
+
+      // Title / meta / description reveal, played as the card takes over the
+      // viewport. It stays revealed for the rest of the section — only
+      // scrolling back above the start rewinds it.
+      const info = card.querySelector<HTMLElement>("[data-card-info]");
+      if (info) {
+        const meta = info.querySelector<HTMLElement>("[data-card-meta]");
+        const chars = info.querySelectorAll<HTMLElement>("[data-card-char]");
+        const desc = info.querySelector<HTMLElement>("[data-card-desc]");
+
+        gsap.set(info, { opacity: 1 });
+        gsap.set(chars, { yPercent: 120 });
+        if (meta) gsap.set(meta, { opacity: 0, y: 12 });
+        if (desc) gsap.set(desc, { opacity: 0, y: 18 });
+
+        const reveal = gsap.timeline({ paused: true });
+        if (meta) reveal.to(meta, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0);
+        reveal.to(chars, { yPercent: 0, duration: 0.7, ease: "power3.out", stagger: 0.022 }, 0.06);
+        if (desc) reveal.to(desc, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.3);
+
+        // The first card is already on screen, so it reveals slightly before the
+        // section pins; the rest reveal while they slide up into place.
+        const startPx = i === 0 ? -0.35 * vh : (i - 1) * vh + 0.62 * vh;
+
+        ScrollTrigger.create({
+          trigger: container,
+          scroller: scrollerEl,
+          start: `top+=${startPx}px top`,
+          end: "bottom bottom",
+          toggleActions: "play none none reverse",
+          animation: reveal,
         });
       }
     });
@@ -334,12 +370,59 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                 alt={card.label}
                 className="w-full h-full object-cover transition-[filter] duration-500 ease-out"
               />
-              <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/50" />
+              <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/30" />
+              {/* Radial scrim anchored to the bottom-left corner, under the card text. */}
               <div
-                className="absolute bottom-8 left-8 text-white font-light leading-none select-none"
-                style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle farthest-side at 0% 100%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
+                }}
+              />
+              <div
+                data-card-info
+                className="absolute bottom-8 left-8 right-8 text-white select-none pointer-events-none"
+                style={{ opacity: 0 }}
               >
-                {card.label}
+                {(card.year || card.category) && (
+                  <div
+                    data-card-meta
+                    className="mb-3 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-white/60"
+                  >
+                    {card.year && <span>{card.year}</span>}
+                    {card.year && card.category && <span className="h-px w-6 bg-white/40" />}
+                    {card.category && <span>{card.category}</span>}
+                  </div>
+                )}
+
+                <h3
+                  className="font-light leading-[1.05]"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+                >
+                  {card.label.split(" ").map((word, w, words) => (
+                    <span
+                      key={w}
+                      className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]"
+                    >
+                      {Array.from(word).map((ch, c) => (
+                        <span key={c} data-card-char className="inline-block">
+                          {ch}
+                        </span>
+                      ))}
+                      {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
+                    </span>
+                  ))}
+                </h3>
+
+                {card.description && (
+                  <p
+                    data-card-desc
+                    className="mt-4 max-w-xl font-light leading-relaxed text-white/70"
+                    style={{ fontSize: "clamp(0.85rem, 1.15vw, 1.05rem)" }}
+                  >
+                    {card.description}
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -376,8 +459,15 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                   className="w-full h-full object-cover pointer-events-none"
                 />
 
-                <div className="absolute bottom-8 left-8 text-white/50 text-xs tracking-[0.3em] uppercase select-none pointer-events-none">
-                  {CARDS[expandedIndex].label}
+                <div className="absolute bottom-8 left-8 max-w-xl select-none pointer-events-none">
+                  <div className="text-white/50 text-xs tracking-[0.3em] uppercase">
+                    {CARDS[expandedIndex].label}
+                  </div>
+                  {CARDS[expandedIndex].description && (
+                    <p className="mt-2 text-sm font-light leading-relaxed text-white/40">
+                      {CARDS[expandedIndex].description}
+                    </p>
+                  )}
                 </div>
 
                 <div className="absolute bottom-8 right-8 text-white/30 text-xs tracking-[0.2em] select-none pointer-events-none">
