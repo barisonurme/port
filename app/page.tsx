@@ -8,6 +8,7 @@ import { ContactSection } from "@/components/ContactSection";
 import { StickyProjectParallax } from "@/components/sticky-project-parallax";
 import { projects } from "@/lib/projects-data";
 import Grainient from "@/components/Grainient";
+import DotGrid from "@/components/DotGrid";
 
 const FALLBACK_COLOR = "#007AFF";
 
@@ -86,6 +87,21 @@ export default function Home() {
 
       <div className="fixed inset-0 z-0">
         <Grainient color1="#000000" color2={bgColor} color3="#000000" />
+      </div>
+
+      {/* Interactive dot field sitting on top of the gradient, behind all content. */}
+      <div className="fixed inset-0 opacity-50 pointer-events-none">
+        <DotGrid
+          dotSize={1}
+          gap={28}
+          baseColor={bgColor}
+          activeColor={bgColor}
+          proximity={140}
+          shockRadius={260}
+          shockStrength={4}
+          resistance={750}
+          returnDuration={1.4}
+        />
       </div>
 
       <div data-hero-trigger className="relative w-full">
