@@ -11,14 +11,6 @@ export interface Props {
   pointerStrength?: number;
   refraction?: number;
   ripple?: boolean;
-  /** Keep warping while the pointer is away. */
-  idleMotion?: boolean;
-  /** How much of the pointer lens survives when nothing is hovering (0-1). */
-  idleStrength?: number;
-  /** Speed of the idle wander, in loops per second. */
-  idleSpeed?: number;
-  /** How far the idle wander strays from the centre, in UV units. */
-  idleRadius?: number;
   fontSize?: string | number;
   fontWeight?: string | number;
   fontFamily?: string;
@@ -43,10 +35,6 @@ interface RuntimeProps {
   pointerStrength: number;
   refraction: number;
   ripple: boolean;
-  idleMotion: boolean;
-  idleStrength: number;
-  idleSpeed: number;
-  idleRadius: number;
 }
 
 interface RuntimeContext {
@@ -88,7 +76,6 @@ uniform float uPointerStrength;
 uniform float uRefraction;
 uniform float uRipple;
 uniform float uMotion;
-uniform float uIdle;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -136,26 +123,10 @@ void main() {
   float time = uTime * uSpeed;
   float scale = max(uWarpScale, 0.001);
 
-  // Everything below is authored in "square" space, where one unit is the same
-  // number of pixels across as it is down, and converted back to UV once at the
-  // end. The hero box runs about 12:1, so working in raw UV would make an equal
-  // nudge twelve times wider than it is tall and shear the glyphs apart, and it
-  // would make the noise vary twelve times faster vertically than horizontally,
-  // which is per-pixel grain rather than a wobble. ASCII only in here: the GLSL
-  // ES source character set does not include anything above 127, comments too.
-  vec2 sq = vec2(uv.x, uv.y / aspect);
-  vec2 toUv = vec2(1.0 / aspect, 1.0);
-
   vec2 drift = vec2(time * 0.055, -time * 0.045);
-  float n1 = fbm(sq * scale * 3.1 + drift);
-  float n2 = fbm((sq + 19.17) * scale * 3.4 - drift.yx);
+  float n1 = fbm(uv * scale * 3.1 + drift);
+  float n2 = fbm((uv + 19.17) * scale * 3.4 - drift.yx);
   vec2 ambient = (vec2(n1, n2) - 0.5) * uWarpStrength * 0.045 * uMotion;
-
-  // Idle only. A slow diagonal wave that breathes in and out, so the letters
-  // keep moving with nobody on them instead of settling into a still frame.
-  float idleWave = sin((sq.x * 3.4 + sq.y * 2.1) * 2.0 - time * 1.6);
-  float idleSwell = 0.65 + 0.35 * sin(time * 0.9);
-  ambient += vec2(idleWave, -idleWave * 0.6) * uWarpStrength * 0.014 * uIdle * idleSwell * uMotion;
 
   vec2 pointerDelta = uv - uPointer;
   vec2 aspectDelta = vec2(pointerDelta.x * aspect, pointerDelta.y);
@@ -164,18 +135,18 @@ void main() {
   float t = clamp(dist / radius, 0.0, 1.0);
   float lens = smoothstep(radius, 0.0, dist) * uPointerActive;
   float bulge = t * (1.0 - t) * (1.0 - t) * 6.75 * uPointerActive;
-  vec2 dir = dist > 0.0001 ? aspectDelta / dist : vec2(0.0);
+  vec2 dir = dist > 0.0001 ? vec2(aspectDelta.x / aspect, aspectDelta.y) / dist : vec2(0.0);
 
   float rippleWave = sin(dist * 28.0 - time * 4.2) * 0.5 + 0.5;
   float rippleRing = (rippleWave - 0.5) * uRipple;
   vec2 pointerWarp = -dir * bulge * uPointerStrength * 0.045;
   pointerWarp += dir * rippleRing * bulge * uPointerStrength * 0.016;
 
-  vec2 offset = ambient + pointerWarp;
-  vec2 displaced = uv + offset * toUv;
-  float splitLen = length(offset);
-  vec2 splitDir = splitLen > 0.00001 ? offset / splitLen : vec2(0.7071, 0.7071);
-  vec2 split = splitDir * toUv * uRefraction * 0.16 * (0.35 + lens * 1.65);
+  vec2 displaced = uv + ambient + pointerWarp;
+  vec2 splitDir = ambient + pointerWarp;
+  float splitLen = length(splitDir);
+  splitDir = splitLen > 0.00001 ? splitDir / splitLen : vec2(0.7071, 0.7071);
+  vec2 split = splitDir * uRefraction * 0.16 * (0.35 + lens * 1.65);
 
   vec4 base = sampleText(displaced);
   float r = sampleText(displaced + split).r;
@@ -294,10 +265,6 @@ const WarpText = ({
   pointerStrength = 0.38,
   refraction = 0.018,
   ripple = true,
-  idleMotion = true,
-  idleStrength = 0.55,
-  idleSpeed = 0.28,
-  idleRadius = 0.26,
   fontSize = 'clamp(3rem, 10vw, 9rem)',
   fontWeight = 800,
   fontFamily = 'inherit',
@@ -321,11 +288,7 @@ const WarpText = ({
     pointerInfluence,
     pointerStrength,
     refraction,
-    ripple,
-    idleMotion,
-    idleStrength,
-    idleSpeed,
-    idleRadius
+    ripple
   });
   const contextRef = useRef<RuntimeContext | null>(null);
 
@@ -344,11 +307,7 @@ const WarpText = ({
       pointerInfluence,
       pointerStrength,
       refraction,
-      ripple,
-      idleMotion,
-      idleStrength,
-      idleSpeed,
-      idleRadius
+      ripple
     };
 
     if (contextRef.current) {
@@ -369,11 +328,7 @@ const WarpText = ({
     pointerInfluence,
     pointerStrength,
     refraction,
-    ripple,
-    idleMotion,
-    idleStrength,
-    idleSpeed,
-    idleRadius
+    ripple
   ]);
 
   useEffect(() => {
@@ -396,7 +351,7 @@ const WarpText = ({
     let reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let rasterVersion = 0;
 
-    const pointer = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, active: 0, activeTarget: 0, hover: 0 };
+    const pointer = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, active: 0, activeTarget: 0 };
     const startTime = performance.now();
 
     try {
@@ -451,7 +406,6 @@ const WarpText = ({
         uPointerStrength: { value: propsRef.current.pointerStrength },
         uRefraction: { value: propsRef.current.refraction },
         uRipple: { value: propsRef.current.ripple ? 1 : 0 },
-        uIdle: { value: 0 },
         uMotion: { value: reduceMotion ? 0 : 1 }
       }
     });
@@ -539,30 +493,19 @@ const WarpText = ({
       if (disposed || contextLost) return;
 
       const elapsed = (now - startTime) * 0.001;
-      const runtime = propsRef.current;
-      const hovered = pointer.activeTarget > 0;
-      const idle = runtime.idleMotion && !reduceMotion ? 1 : 0;
-
-      // With no pointer the lens drives itself: two sines at incommensurate
-      // rates, so the path never repeats the same loop twice.
-      const wander = elapsed * runtime.idleSpeed;
-      const idleX = 0.5 + Math.sin(wander) * runtime.idleRadius;
-      const idleY = 0.5 + Math.sin(wander * 1.37 + 1.1) * runtime.idleRadius * 0.62;
-      const targetX = hovered ? pointer.tx : idleX;
-      const targetY = hovered ? pointer.ty : idleY;
-      const damping = hovered ? 0.12 : 0.035;
+      const idleX = 0.5 + Math.sin(elapsed * 0.33) * 0.12;
+      const idleY = 0.5 + Math.cos(elapsed * 0.27) * 0.1;
+      const targetX = pointer.activeTarget > 0 ? pointer.tx : idleX;
+      const targetY = pointer.activeTarget > 0 ? pointer.ty : idleY;
+      const damping = pointer.activeTarget > 0 ? 0.12 : 0.035;
 
       pointer.x += (targetX - pointer.x) * damping;
       pointer.y += (targetY - pointer.y) * damping;
-      // hover crossfades the idle wave out; active keeps the lens itself alive.
-      pointer.hover += ((hovered ? 1 : 0) - pointer.hover) * 0.06;
-      const resting = idle ? runtime.idleStrength : 0.18;
-      pointer.active += ((hovered ? 1 : resting) - pointer.active) * 0.06;
+      pointer.active += ((pointer.activeTarget > 0 ? 1 : 0.18) - pointer.active) * 0.06;
 
       program.uniforms.uPointer.value[0] = pointer.x;
       program.uniforms.uPointer.value[1] = pointer.y;
       program.uniforms.uPointerActive.value = reduceMotion ? pointer.active * 0.35 : pointer.active;
-      program.uniforms.uIdle.value = (1 - pointer.hover) * idle;
       program.uniforms.uTime.value = reduceMotion ? 0 : elapsed;
 
       renderOnce();

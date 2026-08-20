@@ -113,10 +113,6 @@ export default function HeroText() {
           pointerStrength={1.5}
           refraction={0.058}
           ripple
-          idleMotion
-          idleStrength={0.6}
-          idleSpeed={0.3}
-          idleRadius={0.3}
           fontSize="clamp(2.25rem, 12vw, 7.25rem)"
           fontWeight={600}
           letterSpacing="-0.06em"
