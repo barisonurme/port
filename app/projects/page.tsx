@@ -200,6 +200,10 @@ const projectContent: Record<number, ReactNode> = {
 
 const TITLE_FONT = "clamp(4rem, 14vw, 13rem)";
 
+// Dwell time before a hover counts as intent — keeps fast mouse fly-bys from
+// firing the image crossfade for every item they pass over.
+const HOVER_INTENT_MS = 120;
+
 function ProjectsPage() {
     const navigate = usePageTransition();
     const router = useRouter();
@@ -231,6 +235,36 @@ function ProjectsPage() {
     const pendingNavRef = useRef<{ direction: "prev" | "next" } | null>(null);
     const isAnimatingNavRef = useRef(false);
     const scrollCooldownRef = useRef(false);
+    const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const committedHoverRef = useRef<number | null>(null);
+
+    const clearHoverTimer = useCallback(() => {
+        if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+        }
+    }, []);
+
+    const handleItemEnter = useCallback((id: number) => {
+        clearHoverTimer();
+        hoverTimerRef.current = setTimeout(() => {
+            hoverTimerRef.current = null;
+            committedHoverRef.current = id;
+            setHoveredId(id);
+        }, HOVER_INTENT_MS);
+    }, [clearHoverTimer]);
+
+    const handleItemLeave = useCallback((id: number) => {
+        clearHoverTimer();
+        // Only hand the item over to the auto-rotation if the hover actually landed.
+        if (committedHoverRef.current === id) {
+            committedHoverRef.current = null;
+            setAutoId(id);
+            setHoveredId(null);
+        }
+    }, [clearHoverTimer]);
+
+    useEffect(() => clearHoverTimer, [clearHoverTimer]);
 
     const activeProject = projects.find((p) => p.id === activeId) ?? null;
     const currentIndex = activeId != null ? projects.findIndex((p) => p.id === activeId) : -1;
@@ -652,8 +686,8 @@ function ProjectsPage() {
                 {projects.map((p, i) => (
                     <button
                         key={p.id}
-                        onMouseEnter={() => setHoveredId(p.id)}
-                        onMouseLeave={() => { setAutoId(p.id); setHoveredId(null); }}
+                        onMouseEnter={() => handleItemEnter(p.id)}
+                        onMouseLeave={() => handleItemLeave(p.id)}
                         onClick={(e) => { e.stopPropagation(); open(p.id); }}
                         className="group flex items-center gap-4 py-1.5 cursor-pointer"
                     >
