@@ -106,7 +106,7 @@ export default function HeroText() {
           stackedText={'Building & Shipping\nSoftware'}
           height="clamp(1rem, 13vh, 9rem)"
           stackedHeight="clamp(3rem, 13.7vw, 16.7rem)"
-          warpStrength={15}
+          warpStrength={2.5}
           warpScale={7}
           speed={1}
           pointerInfluence={1.5}

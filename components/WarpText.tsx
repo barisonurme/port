@@ -136,14 +136,24 @@ void main() {
   float time = uTime * uSpeed;
   float scale = max(uWarpScale, 0.001);
 
+  // Everything below is authored in "square" space, where one unit is the same
+  // number of pixels across as it is down, and converted back to UV once at the
+  // end. The hero box runs about 12:1, so working in raw UV would make an equal
+  // nudge twelve times wider than it is tall and shear the glyphs apart, and it
+  // would make the noise vary twelve times faster vertically than horizontally,
+  // which is per-pixel grain rather than a wobble. ASCII only in here: the GLSL
+  // ES source character set does not include anything above 127, comments too.
+  vec2 sq = vec2(uv.x, uv.y / aspect);
+  vec2 toUv = vec2(1.0 / aspect, 1.0);
+
   vec2 drift = vec2(time * 0.055, -time * 0.045);
-  float n1 = fbm(uv * scale * 3.1 + drift);
-  float n2 = fbm((uv + 19.17) * scale * 3.4 - drift.yx);
+  float n1 = fbm(sq * scale * 3.1 + drift);
+  float n2 = fbm((sq + 19.17) * scale * 3.4 - drift.yx);
   vec2 ambient = (vec2(n1, n2) - 0.5) * uWarpStrength * 0.045 * uMotion;
 
   // Idle only. A slow diagonal wave that breathes in and out, so the letters
   // keep moving with nobody on them instead of settling into a still frame.
-  float idleWave = sin((uv.x * 3.4 + uv.y * 2.1) * 2.0 - time * 1.6);
+  float idleWave = sin((sq.x * 3.4 + sq.y * 2.1) * 2.0 - time * 1.6);
   float idleSwell = 0.65 + 0.35 * sin(time * 0.9);
   ambient += vec2(idleWave, -idleWave * 0.6) * uWarpStrength * 0.014 * uIdle * idleSwell * uMotion;
 
@@ -154,18 +164,18 @@ void main() {
   float t = clamp(dist / radius, 0.0, 1.0);
   float lens = smoothstep(radius, 0.0, dist) * uPointerActive;
   float bulge = t * (1.0 - t) * (1.0 - t) * 6.75 * uPointerActive;
-  vec2 dir = dist > 0.0001 ? vec2(aspectDelta.x / aspect, aspectDelta.y) / dist : vec2(0.0);
+  vec2 dir = dist > 0.0001 ? aspectDelta / dist : vec2(0.0);
 
   float rippleWave = sin(dist * 28.0 - time * 4.2) * 0.5 + 0.5;
   float rippleRing = (rippleWave - 0.5) * uRipple;
   vec2 pointerWarp = -dir * bulge * uPointerStrength * 0.045;
   pointerWarp += dir * rippleRing * bulge * uPointerStrength * 0.016;
 
-  vec2 displaced = uv + ambient + pointerWarp;
-  vec2 splitDir = ambient + pointerWarp;
-  float splitLen = length(splitDir);
-  splitDir = splitLen > 0.00001 ? splitDir / splitLen : vec2(0.7071, 0.7071);
-  vec2 split = splitDir * uRefraction * 0.16 * (0.35 + lens * 1.65);
+  vec2 offset = ambient + pointerWarp;
+  vec2 displaced = uv + offset * toUv;
+  float splitLen = length(offset);
+  vec2 splitDir = splitLen > 0.00001 ? offset / splitLen : vec2(0.7071, 0.7071);
+  vec2 split = splitDir * toUv * uRefraction * 0.16 * (0.35 + lens * 1.65);
 
   vec4 base = sampleText(displaced);
   float r = sampleText(displaced + split).r;
