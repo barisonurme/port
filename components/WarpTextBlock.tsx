@@ -34,7 +34,7 @@ export default function WarpTextBlock({
   stackedText,
   stackQuery = '(max-width: 1023px)',
   height = 'clamp(1rem, 13vh, 9rem)',
-  stackedHeight = 'clamp(3rem, 13.7vw, 16.7rem)',
+  stackedHeight = 'clamp(5.5rem, 22vw, 16.7rem)',
   className = 'flex w-full max-w-6xl',
   style,
   ...warpProps

@@ -100,12 +100,14 @@ export default function HeroText() {
         {/* Each height tracks the font it has to hold: stacked is 2 lines x
             0.9 line-height / 0.78 against the same vw as the font, wide is one
             line against vh so short widescreens don't hand the hero a band of
-            empty canvas. */}
+            empty canvas. Undersize the stacked box and the fit pass answers by
+            shrinking the type — that is how the phone headline ended up
+            smaller than the tagline under it. */}
         <WarpTextBlock
           text="Building & Shipping Software"
           stackedText={'Building & Shipping\nSoftware'}
           height="clamp(1rem, 13vh, 9rem)"
-          stackedHeight="clamp(3rem, 13.7vw, 16.7rem)"
+          stackedHeight="clamp(5.5rem, 22vw, 16.7rem)"
           warpStrength={2.5}
           warpScale={7}
           speed={1}

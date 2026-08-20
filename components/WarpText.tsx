@@ -42,6 +42,12 @@ interface RuntimeContext {
   rasterize: () => void;
 }
 
+interface TextRaster {
+  canvas: HTMLCanvasElement;
+  /** Font size the fit pass ended up drawing at, in CSS px. */
+  unit: number;
+}
+
 interface BuildTextCanvasArgs {
   container: HTMLElement;
   width: number;
@@ -76,6 +82,8 @@ uniform float uPointerStrength;
 uniform float uRefraction;
 uniform float uRipple;
 uniform float uMotion;
+uniform vec2 uUnit;
+uniform float uLegibility;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -123,10 +131,29 @@ void main() {
   float time = uTime * uSpeed;
   float scale = max(uWarpScale, 0.001);
 
+  // Every offset below is authored in ems of the type that was actually
+  // rasterized, and only converted to UV through uUnit at the end. Offsets
+  // written straight into UV are relative to the canvas instead, which is what
+  // made the headline read as a liquid warp on a wide desktop band and as
+  // confetti on a phone: UV-x is stretched by the aspect ratio, so the same
+  // number drags a glyph ~10x further sideways than down, and the fit pass
+  // shrinks the glyphs on a small box while the warp keeps its size. In em
+  // space the look holds at every viewport, and the noise cells stay square
+  // rather than collapsing into bands a few pixels tall.
+  vec2 unit = max(uUnit, vec2(0.0001));
+  vec2 field = uv / unit;
+
+  // Proportional isn't enough on small type. A chroma split of 0.03em is 3px
+  // of colour on a 100px desktop headline — a lens — and 1px on a 39px phone
+  // one, which lands on the pixel grid next to the glyph's own antialiasing
+  // and reads as a rendering fault instead. uLegibility is 0 for small type
+  // and 1 for large, so the effect gives ground as the type gets smaller.
+  float ease = mix(0.3, 1.0, clamp(uLegibility, 0.0, 1.0));
+
   vec2 drift = vec2(time * 0.055, -time * 0.045);
-  float n1 = fbm(uv * scale * 3.1 + drift);
-  float n2 = fbm((uv + 19.17) * scale * 3.4 - drift.yx);
-  vec2 ambient = (vec2(n1, n2) - 0.5) * uWarpStrength * 0.045 * uMotion;
+  float n1 = fbm(field * scale * 0.05 + drift);
+  float n2 = fbm((field + 19.17) * scale * 0.055 - drift.yx);
+  vec2 ambient = (vec2(n1, n2) - 0.5) * uWarpStrength * 0.15 * uMotion * ease * unit;
 
   vec2 pointerDelta = uv - uPointer;
   vec2 aspectDelta = vec2(pointerDelta.x * aspect, pointerDelta.y);
@@ -135,18 +162,18 @@ void main() {
   float t = clamp(dist / radius, 0.0, 1.0);
   float lens = smoothstep(radius, 0.0, dist) * uPointerActive;
   float bulge = t * (1.0 - t) * (1.0 - t) * 6.75 * uPointerActive;
-  vec2 dir = dist > 0.0001 ? vec2(aspectDelta.x / aspect, aspectDelta.y) / dist : vec2(0.0);
+  vec2 dir = dist > 0.0001 ? aspectDelta / dist : vec2(0.0);
 
   float rippleWave = sin(dist * 28.0 - time * 4.2) * 0.5 + 0.5;
   float rippleRing = (rippleWave - 0.5) * uRipple;
-  vec2 pointerWarp = -dir * bulge * uPointerStrength * 0.045;
-  pointerWarp += dir * rippleRing * bulge * uPointerStrength * 0.016;
+  vec2 pointerWarp = -dir * bulge * uPointerStrength * 0.1 * ease * unit;
+  pointerWarp += dir * rippleRing * bulge * uPointerStrength * 0.036 * ease * unit;
 
   vec2 displaced = uv + ambient + pointerWarp;
-  vec2 splitDir = ambient + pointerWarp;
+  vec2 splitDir = (ambient + pointerWarp) / unit;
   float splitLen = length(splitDir);
   splitDir = splitLen > 0.00001 ? splitDir / splitLen : vec2(0.7071, 0.7071);
-  vec2 split = splitDir * uRefraction * 0.16 * (0.35 + lens * 1.65);
+  vec2 split = splitDir * unit * uRefraction * 1.5 * ease * (0.35 + lens * 1.65);
 
   vec4 base = sampleText(displaced);
   float r = sampleText(displaced + split).r;
@@ -177,13 +204,13 @@ const drawLine = (ctx: CanvasRenderingContext2D, line: string, x: number, y: num
   });
 };
 
-const buildTextCanvas = ({ container, width, height, dpr, props }: BuildTextCanvasArgs): HTMLCanvasElement => {
+const buildTextCanvas = ({ container, width, height, dpr, props }: BuildTextCanvasArgs): TextRaster => {
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.floor(width * dpr));
   canvas.height = Math.max(1, Math.floor(height * dpr));
 
   const ctx = canvas.getContext('2d');
-  if (!ctx) return canvas;
+  if (!ctx) return { canvas, unit: height };
 
   const probe = document.createElement('span');
   probe.textContent = props.text;
@@ -241,7 +268,7 @@ const buildTextCanvas = ({ container, width, height, dpr, props }: BuildTextCanv
   const startY = height / 2 - (lineHeight * (lines.length - 1)) / 2;
   lines.forEach((line, index) => drawLine(ctx, line, width / 2, startY + index * lineHeight, letterSpacing));
 
-  return canvas;
+  return { canvas, unit: fontSizePx };
 };
 
 const syncUniforms = (program: Program, props: RuntimeProps): void => {
@@ -352,6 +379,11 @@ const WarpText = ({
     let rasterVersion = 0;
 
     const pointer = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, active: 0, activeTarget: 0 };
+    // Touch never sets activeTarget (see onPointerMove), so on a phone the
+    // resting lens and its idle wander were a distortion drifting across the
+    // headline that the reader had no way to move or dismiss. Give the pointer
+    // effects to devices that can actually aim them.
+    const canHover = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? true;
     const startTime = performance.now();
 
     try {
@@ -406,7 +438,10 @@ const WarpText = ({
         uPointerStrength: { value: propsRef.current.pointerStrength },
         uRefraction: { value: propsRef.current.refraction },
         uRipple: { value: propsRef.current.ripple ? 1 : 0 },
-        uMotion: { value: reduceMotion ? 0 : 1 }
+        uMotion: { value: reduceMotion ? 0 : 1 },
+        // UV distance of one em, per axis. Filled in by the raster pass.
+        uUnit: { value: new Float32Array([0.1, 0.5]) },
+        uLegibility: { value: 1 }
       }
     });
     mesh = new Mesh(gl, { geometry, program });
@@ -421,7 +456,7 @@ const WarpText = ({
       if (document.fonts?.ready) {
         try {
           await document.fonts.ready;
-        } catch {}
+        } catch { }
       }
       if (disposed || contextLost || version !== rasterVersion) return;
 
@@ -429,7 +464,7 @@ const WarpText = ({
       if (rect.width <= 0 || rect.height <= 0) return;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const textCanvas = buildTextCanvas({
+      const { canvas: textCanvas, unit } = buildTextCanvas({
         container,
         width: rect.width,
         height: rect.height,
@@ -438,6 +473,11 @@ const WarpText = ({
       });
       texture.image = textCanvas;
       texture.needsUpdate = true;
+      program.uniforms.uUnit.value[0] = unit / Math.max(rect.width, 1);
+      program.uniforms.uUnit.value[1] = unit / Math.max(rect.height, 1);
+      // CSS px, not device px: what matters is how many pixels of fringe sit
+      // beside a stroke, and both scale with dpr together.
+      program.uniforms.uLegibility.value = Math.min(Math.max((unit - 20) / 60, 0), 1);
       renderOnce();
     };
 
@@ -493,15 +533,16 @@ const WarpText = ({
       if (disposed || contextLost) return;
 
       const elapsed = (now - startTime) * 0.001;
-      const idleX = 0.5 + Math.sin(elapsed * 0.33) * 0.12;
-      const idleY = 0.5 + Math.cos(elapsed * 0.27) * 0.1;
+      const idleX = canHover ? 0.5 + Math.sin(elapsed * 0.33) * 0.12 : 0.5;
+      const idleY = canHover ? 0.5 + Math.cos(elapsed * 0.27) * 0.1 : 0.5;
       const targetX = pointer.activeTarget > 0 ? pointer.tx : idleX;
       const targetY = pointer.activeTarget > 0 ? pointer.ty : idleY;
       const damping = pointer.activeTarget > 0 ? 0.12 : 0.035;
 
       pointer.x += (targetX - pointer.x) * damping;
       pointer.y += (targetY - pointer.y) * damping;
-      pointer.active += ((pointer.activeTarget > 0 ? 1 : 0.18) - pointer.active) * 0.06;
+      const restingActive = canHover ? 0.18 : 0;
+      pointer.active += ((pointer.activeTarget > 0 ? 1 : restingActive) - pointer.active) * 0.06;
 
       program.uniforms.uPointer.value[0] = pointer.x;
       program.uniforms.uPointer.value[1] = pointer.y;
@@ -557,7 +598,7 @@ const WarpText = ({
           geometry?.remove?.();
           program?.remove?.();
           gl.getExtension('WEBGL_lose_context')?.loseContext();
-        } catch {}
+        } catch { }
       }
 
       if (canvas.parentNode === container) container.removeChild(canvas);
