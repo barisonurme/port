@@ -9,10 +9,10 @@ import { StickyProjectParallax } from "@/components/sticky-project-parallax";
 import { projects } from "@/lib/projects-data";
 import Grainient from "@/components/Grainient";
 
-const FALLBACK_COLOR = "#FF5B3F";
+const FALLBACK_COLOR = "#007AFF";
 
 /** Colors the background drifts through while no project is active. */
-const IDLE_PALETTE = ["#FF5B3F", "#4CD18F", "#007AFF", "#F39E0A", "#B14CFF"];
+const IDLE_PALETTE = ["#007AFF", "#FF5B3F", "#4CD18F", "#007AFF", "#F39E0A", "#B14CFF"];
 /** Seconds held on a color before fading, and the fade itself. */
 const IDLE_HOLD = 2.5;
 const IDLE_FADE = 3;
@@ -27,7 +27,7 @@ function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
 }
 
 const featuredProjects = projects.filter((p) => p.featured);
-const initialColor = "#FF5B3F";
+const initialColor = "#007AFF";
 
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);

@@ -127,7 +127,7 @@ export default function HeroText() {
             lowercase start and the missing period are deliberate: the thought
             closes on "end to end", not here. */}
         <p className="text-xl! sm:text-2xl! text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.65)]">
-          that people can actually feel, fullstack and end to end
+          That Actually Scalable, Functional and Maintainable from End to End
         </p>
 
         <div className="flex gap-4 mt-4">
