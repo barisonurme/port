@@ -204,6 +204,12 @@ const TITLE_FONT = "clamp(4rem, 14vw, 13rem)";
 // firing the image crossfade for every item they pass over.
 const HOVER_INTENT_MS = 120;
 
+// Touch equivalent of one wheel notch. A gesture only counts as a swipe if it
+// is mostly vertical, long enough to not be a jittery tap, and quick enough to
+// read as a flick rather than a press-and-drag.
+const SWIPE_MIN_PX = 40;
+const SWIPE_MAX_MS = 600;
+
 function ProjectsPage() {
     const navigate = usePageTransition();
     const router = useRouter();
@@ -213,6 +219,11 @@ function ProjectsPage() {
     const [autoId, setAutoId] = useState<number>(projects[0].id);
     const [activeId, setActiveId] = useState<number | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+    // Auto-rotation is an attract loop for an idle page. The moment a touch user
+    // takes the wheel — swipe or tap-select — it would just steal their choice
+    // back 2.5s later, so it stops for good.
+    const [autoPaused, setAutoPaused] = useState(false);
 
     const displayId = isExpanded ? null : (hoveredId ?? autoId);
 
@@ -237,6 +248,8 @@ function ProjectsPage() {
     const scrollCooldownRef = useRef(false);
     const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const committedHoverRef = useRef<number | null>(null);
+    const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
+    const swipedRef = useRef(false);
 
     const clearHoverTimer = useCallback(() => {
         if (hoverTimerRef.current) {
@@ -246,13 +259,15 @@ function ProjectsPage() {
     }, []);
 
     const handleItemEnter = useCallback((id: number) => {
+        // A tap synthesises mouseenter, which would race the tap-to-select below.
+        if (isCoarsePointer) return;
         clearHoverTimer();
         hoverTimerRef.current = setTimeout(() => {
             hoverTimerRef.current = null;
             committedHoverRef.current = id;
             setHoveredId(id);
         }, HOVER_INTENT_MS);
-    }, [clearHoverTimer]);
+    }, [clearHoverTimer, isCoarsePointer]);
 
     const handleItemLeave = useCallback((id: number) => {
         clearHoverTimer();
@@ -265,6 +280,47 @@ function ProjectsPage() {
     }, [clearHoverTimer]);
 
     useEffect(() => clearHoverTimer, [clearHoverTimer]);
+
+    useEffect(() => {
+        const mq = window.matchMedia("(pointer: coarse)");
+        const sync = () => setIsCoarsePointer(mq.matches);
+        sync();
+        mq.addEventListener("change", sync);
+        return () => mq.removeEventListener("change", sync);
+    }, []);
+
+    const stepProject = useCallback((direction: "prev" | "next") => {
+        setAutoId((cur) => {
+            const idx = projects.findIndex((p) => p.id === cur);
+            const next = direction === "next"
+                ? (idx + 1) % projects.length
+                : (idx - 1 + projects.length) % projects.length;
+            return projects[next].id;
+        });
+    }, []);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        if (isExpanded) return;
+        const t = e.touches[0];
+        if (!t) return;
+        swipedRef.current = false;
+        touchStartRef.current = { x: t.clientX, y: t.clientY, t: e.timeStamp };
+    }, [isExpanded]);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        const start = touchStartRef.current;
+        touchStartRef.current = null;
+        const t = e.changedTouches[0];
+        if (!start || !t || isExpanded) return;
+        if (e.timeStamp - start.t > SWIPE_MAX_MS) return;
+        const dy = t.clientY - start.y;
+        const dx = t.clientX - start.x;
+        if (Math.abs(dy) < SWIPE_MIN_PX || Math.abs(dy) <= Math.abs(dx)) return;
+        // Swiping up pulls the next project into view, matching wheel-down.
+        swipedRef.current = true;
+        setAutoPaused(true);
+        stepProject(dy < 0 ? "next" : "prev");
+    }, [isExpanded, stepProject]);
 
     const activeProject = projects.find((p) => p.id === activeId) ?? null;
     const currentIndex = activeId != null ? projects.findIndex((p) => p.id === activeId) : -1;
@@ -283,14 +339,14 @@ function ProjectsPage() {
     }, [isExpanded]);
 
     useEffect(() => {
-        if (isExpanded) return;
+        if (isExpanded || autoPaused) return;
         let idx = projects.findIndex((p) => p.id === autoId);
         const timer = setInterval(() => {
             idx = (idx + 1) % projects.length;
             setAutoId(projects[idx].id);
         }, 2500);
         return () => clearInterval(timer);
-    }, [isExpanded, autoId]);
+    }, [isExpanded, autoPaused, autoId]);
 
     useEffect(() => {
         const prev = prevDisplayIdRef.current;
@@ -436,7 +492,7 @@ function ProjectsPage() {
     // happens in that case.
     const handleMagnifierMouseMove = useCallback((e: React.MouseEvent) => {
         const cursor = magnifierCursorRef.current;
-        if (!cursor) return;
+        if (!cursor || isCoarsePointer) return;
         cursor.style.left = `${e.clientX}px`;
         cursor.style.top = `${e.clientY}px`;
 
@@ -447,7 +503,7 @@ function ProjectsPage() {
         gsap.to(cursor, shouldShow
             ? { opacity: 1, scale: 1, duration: 0.2, ease: "power2.out" }
             : { opacity: 0, scale: 0.8, duration: 0.2, ease: "power2.in" });
-    }, [isExpanded]);
+    }, [isExpanded, isCoarsePointer]);
 
     const handleMagnifierMouseLeave = useCallback(() => {
         magnifierVisibleRef.current = false;
@@ -524,14 +580,7 @@ function ProjectsPage() {
             scrollCooldownRef.current = true;
             setTimeout(() => { scrollCooldownRef.current = false; }, 600);
 
-            const direction = e.deltaY > 0 ? "next" : "prev";
-            setAutoId((cur) => {
-                const idx = projects.findIndex((p) => p.id === cur);
-                const next = direction === "next"
-                    ? (idx + 1) % projects.length
-                    : (idx - 1 + projects.length) % projects.length;
-                return projects[next].id;
-            });
+            stepProject(e.deltaY > 0 ? "next" : "prev");
         };
         window.addEventListener("wheel", onWheel, { passive: true });
         return () => window.removeEventListener("wheel", onWheel);
@@ -652,8 +701,18 @@ function ProjectsPage() {
 
     return (
         <div
-            className={cn("relative w-full h-screen overflow-hidden bg-zinc-950", !isExpanded && "cursor-none")}
-            onClick={() => { if (!isExpanded && displayId != null) open(displayId); }}
+            className={cn("relative w-full h-screen overflow-hidden bg-zinc-950", !isExpanded && !isCoarsePointer && "cursor-none")}
+            onClick={() => {
+                // The click that trails a swipe is not a tap on the background.
+                if (swipedRef.current) { swipedRef.current = false; return; }
+                // On touch the background *is* the swipe surface, so opening has
+                // to be an explicit tap on a list item — otherwise a gesture that
+                // falls short of the threshold launches a random project.
+                if (isCoarsePointer || isExpanded || displayId == null) return;
+                open(displayId);
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
             onMouseMove={handleMagnifierMouseMove}
             onMouseLeave={handleMagnifierMouseLeave}
         >
@@ -688,7 +747,19 @@ function ProjectsPage() {
                         key={p.id}
                         onMouseEnter={() => handleItemEnter(p.id)}
                         onMouseLeave={() => handleItemLeave(p.id)}
-                        onClick={(e) => { e.stopPropagation(); open(p.id); }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // stopPropagation keeps the root's swipe guard from
+                            // seeing this click, so it has to run here too.
+                            if (swipedRef.current) { swipedRef.current = false; return; }
+                            // Without hover, the first tap does what hover does.
+                            if (isCoarsePointer && displayId !== p.id) {
+                                setAutoPaused(true);
+                                setAutoId(p.id);
+                                return;
+                            }
+                            open(p.id);
+                        }}
                         className="group flex items-center gap-4 py-1.5 cursor-pointer"
                     >
                         <span className={`text-xs transition-colors duration-500 ${displayId === p.id ? "text-white/50" : "text-white/20"}`}>
