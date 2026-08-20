@@ -1,29 +1,16 @@
 'use client';;
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowDown } from 'lucide-react';
 import { TransitionLink } from '@/components/transition-link';
 import { SlideButton } from './ui/slide-button';
-import WarpText from './WarpText';
+import WarpTextBlock from './WarpTextBlock';
 
 export default function HeroText() {
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLDivElement>(null);
-  // Below lg the headline breaks onto two lines. WarpText rasterizes to a
-  // canvas, so this can't be a CSS wrap — the string itself has to carry the
-  // newline. Starts false so SSR and the first client render agree.
-  const [stacked, setStacked] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 1023px)');
-    const sync = () => setStacked(query.matches);
-
-    sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
-  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -110,31 +97,31 @@ export default function HeroText() {
             gradient takes away, and the tagline is a <p>, not an <h4> — it's
             a subtitle, not the next level of the document outline. */}
 
-        {/* The wrapper owns the height; WarpText fills it. Its canvas is
-            rasterized from the container's box and the glyphs are then fit
-            into 78% of it, so each height tracks the font it has to hold:
-            stacked is 2 lines x 0.9 line-height / 0.78 against the same vw as
-            the font, wide is one line against vh so short widescreens don't
-            hand the hero a band of empty canvas. Give it less and the fit
-            pass just shrinks the text instead. */}
-        <div className={`flex w-full max-w-6xl ${stacked ? 'h-[clamp(3rem,13.7vw,16.7rem)]' : 'h-[clamp(1rem,13vh,9rem)]'}`}>
-
-          <WarpText
-            text={stacked ? 'Building & Shipping\nSoftware' : 'Building & Shipping Software'}
-            warpStrength={15}
-            warpScale={7}
-            speed={1}
-            pointerInfluence={0.5}
-            pointerStrength={0.5}
-            refraction={0.058}
-            ripple
-            fontSize="clamp(2.25rem, 12vw, 7.25rem)"
-            fontWeight={600}
-            style={{ minHeight: 0, height: '100%' }}
-            letterSpacing="-0.06em"
-            lineHeight={0.9}
-          />
-        </div>
+        {/* Each height tracks the font it has to hold: stacked is 2 lines x
+            0.9 line-height / 0.78 against the same vw as the font, wide is one
+            line against vh so short widescreens don't hand the hero a band of
+            empty canvas. */}
+        <WarpTextBlock
+          text="Building & Shipping Software"
+          stackedText={'Building & Shipping\nSoftware'}
+          height="clamp(1rem, 13vh, 9rem)"
+          stackedHeight="clamp(3rem, 13.7vw, 16.7rem)"
+          warpStrength={15}
+          warpScale={7}
+          speed={1}
+          pointerInfluence={1.5}
+          pointerStrength={1.5}
+          refraction={0.058}
+          ripple
+          idleMotion
+          idleStrength={0.6}
+          idleSpeed={0.3}
+          idleRadius={0.3}
+          fontSize="clamp(2.25rem, 12vw, 7.25rem)"
+          fontWeight={600}
+          letterSpacing="-0.06em"
+          lineHeight={0.9}
+        />
 
         {/* Reads as one sentence continuing out of the headline above, so the
             lowercase start and the missing period are deliberate: the thought
