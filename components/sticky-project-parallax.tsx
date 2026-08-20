@@ -371,9 +371,17 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                 className="w-full h-full object-cover transition-[filter] duration-500 ease-out"
               />
               <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/30" />
+              {/* Linear scrim over the bottom third on mobile, under the card text. */}
+              <div
+                className="absolute inset-0 pointer-events-none md:hidden"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 12%, rgba(0,0,0,0.25) 24%, rgba(0,0,0,0) 33%)",
+                }}
+              />
               {/* Radial scrim anchored to the bottom-left corner, under the card text. */}
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none hidden md:block"
                 style={{
                   background:
                     "radial-gradient(circle farthest-side at 0% 100%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
