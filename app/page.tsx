@@ -18,6 +18,15 @@ const IDLE_PALETTE = ["#007AFF", "#FF5B3F", "#4CD18F", "#007AFF", "#F39E0A", "#B
 const IDLE_HOLD = 2.5;
 const IDLE_FADE = 3;
 
+/**
+ * The dot field is `fixed`, so it never scrolls out of view on its own and its
+ * rAF loop would keep repainting every dot for the whole page. Drop it as soon
+ * as the page moves at all; the small gap back down to `SHOW` keeps it from
+ * thrashing when you rest on the boundary.
+ */
+const DOTS_HIDE_AT = 10;
+const DOTS_SHOW_AT = 4;
+
 function hexToRgb(hex: string) {
   const n = parseInt(hex.slice(1), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
@@ -32,6 +41,7 @@ const initialColor = "#007AFF";
 
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);
+  const [dotsMounted, setDotsMounted] = useState(true);
   const colorRef = useRef(hexToRgb(initialColor));
   const idleRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -82,6 +92,32 @@ export default function Home() {
     return stopIdle;
   }, [startIdle, stopIdle]);
 
+  // Mount/unmount the dot field at the very top of the page, sampled once per frame.
+  useEffect(() => {
+    let frame = 0;
+
+    const measure = () => {
+      frame = 0;
+      setDotsMounted((mounted) =>
+        mounted ? window.scrollY < DOTS_HIDE_AT : window.scrollY < DOTS_SHOW_AT
+      );
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
   return (
     <main className="relative">
 
@@ -90,6 +126,7 @@ export default function Home() {
       </div>
 
       {/* Interactive dot field sitting on top of the gradient, behind all content. */}
+      {dotsMounted && (
       <div className="fixed inset-0 opacity-50 pointer-events-none">
         <DotGrid
           dotSize={1}
@@ -103,6 +140,7 @@ export default function Home() {
           returnDuration={1.4}
         />
       </div>
+      )}
 
       <div data-hero-trigger className="relative w-full">
         <section className="sticky top-0 flex items-center justify-center z-10 w-full overflow-hidden">
