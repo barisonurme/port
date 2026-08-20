@@ -143,12 +143,12 @@ void main() {
   vec2 unit = max(uUnit, vec2(0.0001));
   vec2 field = uv / unit;
 
-  // Proportional isn't enough on small type. A chroma split of 0.03em is 3px
-  // of colour on a 100px desktop headline — a lens — and 1px on a 39px phone
-  // one, which lands on the pixel grid next to the glyph's own antialiasing
-  // and reads as a rendering fault instead. uLegibility is 0 for small type
-  // and 1 for large, so the effect gives ground as the type gets smaller.
-  float ease = mix(0.3, 1.0, clamp(uLegibility, 0.0, 1.0));
+  // Proportional isn't enough on small type. A 2px baseline offset is a lean
+  // on a 100px desktop headline and a crooked letter on a 39px phone one —
+  // the eye reads uneven baselines as broken before it reads them as motion.
+  // uLegibility reaches 0 at phone sizes, and at 0 every offset below is
+  // exactly zero: the raster passes through 1:1, straight and crisp.
+  float ease = clamp(uLegibility, 0.0, 1.0);
 
   vec2 drift = vec2(time * 0.055, -time * 0.045);
   float n1 = fbm(field * scale * 0.05 + drift);
@@ -185,6 +185,15 @@ void main() {
   fragColor = vec4(color, a);
 }
 `;
+
+/**
+ * The headline sits next to DOM text that a phone paints at its full device
+ * ratio. Clamping the raster to 2 on a dpr-3 screen meant the glyphs were
+ * drawn at two thirds resolution and scaled back up — soft, ragged edges
+ * against a crisp tagline, which reads as broken rendering before the warp
+ * even gets a say. The canvas is a few hundred px tall, so 3 is cheap here.
+ */
+const MAX_DPR = 3;
 
 const getFontValue = (value: string | number): string => (typeof value === 'number' ? `${value}px` : value);
 
@@ -392,7 +401,7 @@ const WarpText = ({
         alpha: true,
         premultipliedAlpha: false,
         antialias: true,
-        dpr: Math.min(window.devicePixelRatio || 1, 2)
+        dpr: Math.min(window.devicePixelRatio || 1, MAX_DPR)
       });
       gl = renderer.gl;
     } catch (error) {
@@ -463,7 +472,7 @@ const WarpText = ({
       const rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
       const { canvas: textCanvas, unit } = buildTextCanvas({
         container,
         width: rect.width,
@@ -476,8 +485,9 @@ const WarpText = ({
       program.uniforms.uUnit.value[0] = unit / Math.max(rect.width, 1);
       program.uniforms.uUnit.value[1] = unit / Math.max(rect.height, 1);
       // CSS px, not device px: what matters is how many pixels of fringe sit
-      // beside a stroke, and both scale with dpr together.
-      program.uniforms.uLegibility.value = Math.min(Math.max((unit - 20) / 60, 0), 1);
+      // beside a stroke, and both scale with dpr together. Off at or below
+      // 44px type (where the headline stacks on a phone), full at 96px.
+      program.uniforms.uLegibility.value = Math.min(Math.max((unit - 44) / 52, 0), 1);
       renderOnce();
     };
 
@@ -486,7 +496,7 @@ const WarpText = ({
       const rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
 
-      renderer.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      renderer.dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
       renderer.setSize(rect.width, rect.height);
       program.uniforms.uResolution.value[0] = gl.drawingBufferWidth;
       program.uniforms.uResolution.value[1] = gl.drawingBufferHeight;
