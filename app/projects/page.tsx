@@ -872,7 +872,7 @@ function ProjectsPage() {
                             // starves the scroll event, so the JS parallax below
                             // lands in visible jumps and the title won't stay put.
                             isCoarsePointer
-                                ? "sticky top-0 z-30 bg-zinc-950 pb-6"
+                                ? "sticky top-0 z-10 bg-zinc-950 pb-6"
                                 : "relative mb-6"
                         )}
                         style={{ fontSize: TITLE_FONT }}
