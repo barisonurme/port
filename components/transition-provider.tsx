@@ -14,6 +14,15 @@ export function usePageTransition() {
   return useContext(TransitionContext)
 }
 
+// True until the initial loading screen has finished wiping away. Lets
+// content (e.g. the hero) hold its intro animation until it's actually
+// visible instead of playing it behind the cover.
+const InitialLoadingContext = createContext(true)
+
+export function useInitialLoading() {
+  return useContext(InitialLoadingContext)
+}
+
 const STRIP_COUNT = 8
 
 export function TransitionProvider({ children }: { children: React.ReactNode }) {
@@ -209,7 +218,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
 
   return (
     <TransitionContext.Provider value={navigate}>
-      {children}
+      <InitialLoadingContext.Provider value={initialLoading}>
+        {children}
+      </InitialLoadingContext.Provider>
       {/* Sits below the strips (z 9999) so page transitions and the initial
           loading screen cover it without needing their own hide logic. */}
       <ScrollProgress />

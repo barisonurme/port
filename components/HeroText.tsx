@@ -3,12 +3,15 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TransitionLink } from '@/components/transition-link';
+import { useInitialLoading } from '@/components/transition-provider';
 import { SlideButton } from './ui/slide-button';
 import WarpTextBlock from './WarpTextBlock';
 
 export default function HeroText() {
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
+  const introRef = useRef<gsap.core.Tween | null>(null);
+  const initialLoading = useInitialLoading();
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -21,6 +24,16 @@ export default function HeroText() {
 
     // perspective on the parent so children rotation has real depth
     gsap.set(el, { perspective: 300 });
+
+    // Blur + fade the hero in — created paused, played once the initial
+    // loading screen has wiped away (see the [initialLoading] effect below)
+    // so it isn't spent behind the cover.
+    const introTween = gsap.fromTo(
+      inner,
+      { autoAlpha: 0, filter: 'blur(24px)' },
+      { autoAlpha: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power2.out', paused: true }
+    );
+    introRef.current = introTween;
 
     const loopTween = gsap.to(inner, {
       scale: 1,
@@ -62,12 +75,21 @@ export default function HeroText() {
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      introTween.kill();
+      introRef.current = null;
       loopTween.kill();
       ScrollTrigger.getAll().forEach(t => {
         if (t.vars.trigger === trigger) t.kill();
       });
     };
   }, []);
+
+  // Kick off the blur-in the moment the loading screen is gone. On a
+  // client-side nav back to the homepage there's no loader, so this is
+  // already false on mount and the intro plays right away.
+  useEffect(() => {
+    if (!initialLoading) introRef.current?.play();
+  }, [initialLoading]);
 
   return (
     <div

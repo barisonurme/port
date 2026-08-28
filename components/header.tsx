@@ -32,63 +32,21 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
 
     return (
         <div className='flex justify-center items-center w-full top-0 p-4 pt-6 sm:p-8 sm:pt-8 md:p-24 md:pt-10 z-5000 absolute'>
-            <div className='flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/10 p-2 rounded-[22px] border-l border-t border-white/10'>
-                <div className='flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/30 p-3 px-4 md:p-4 md:px-8 rounded-[16px] shadow-xl border-white/10'>
-                    <div className='flex justify-between items-center w-full h-full gap-2'>
-                        <button
-                            type='button'
-                            disabled={pathname === '/'}
-                            aria-current={pathname === '/' ? 'page' : undefined}
-                            onClick={pathname === '/' ? undefined : () => navigate('/')}
-                            className={`flex justify-start items-center gap-2 shrink-0 ${pathname === '/' ? 'cursor-default' : 'cursor-pointer'}`}
-                        >
-                            <Logo color={color} />
-                            BARISONURME
-                        </button>
-
-                        {/* Desktop nav */}
-                        <nav className='hidden md:flex justify-end items-center gap-4'>
-                            {NAV_LINKS.map((link) => {
-                                const active = isActive(link)
-                                return (
-                                    <button
-                                        key={link.href}
-                                        type='button'
-                                        disabled={active}
-                                        aria-current={active ? 'page' : undefined}
-                                        onClick={active ? undefined : () => navigate(link.href)}
-                                        className={`text-white text-lg font-bold transition-opacity duration-300 ${active ? 'opacity-100 cursor-default' : 'opacity-65 cursor-pointer hover:opacity-100'}`}
-                                    >
-                                        {link.label}
-                                    </button>
-                                )
-                            })}
-                        </nav>
-
-                        {/* Hamburger toggle */}
-                        <button
-                            type='button'
-                            aria-label={open ? 'Close menu' : 'Open menu'}
-                            aria-expanded={open}
-                            onClick={() => setOpen((v) => !v)}
-                            className='md:hidden flex flex-col justify-center items-center gap-[5px] w-10 h-10 shrink-0 -mr-1'
-                        >
-                            <span
-                                className={`block h-[2px] w-6 bg-white transition-transform duration-300 ${open ? 'translate-y-[7px] rotate-45' : ''}`}
-                            />
-                            <span
-                                className={`block h-[2px] w-6 bg-white transition-opacity duration-300 ${open ? 'opacity-0' : 'opacity-100'}`}
-                            />
-                            <span
-                                className={`block h-[2px] w-6 bg-white transition-transform duration-300 ${open ? '-translate-y-[7px] -rotate-45' : ''}`}
-                            />
-                        </button>
-                    </div>
-
-                    {/* Mobile menu */}
-                    <nav
-                        className={`md:hidden flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${open ? 'max-h-60 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
+            <div className='border-l border-t flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/30 p-3 px-4 md:p-8 md:px-12 rounded-[16px] shadow-xl border-white/20'>
+                <div className='flex justify-between  items-center w-full h-full gap-2'>
+                    <button
+                        type='button'
+                        disabled={pathname === '/'}
+                        aria-current={pathname === '/' ? 'page' : undefined}
+                        onClick={pathname === '/' ? undefined : () => navigate('/')}
+                        className={`flex justify-start items-center gap-2 shrink-0 ${pathname === '/' ? 'cursor-default' : 'cursor-pointer'}`}
                     >
+                        <Logo color={color} />
+                        BARISONURME
+                    </button>
+
+                    {/* Desktop nav */}
+                    <nav className='hidden md:flex justify-end items-center gap-8'>
                         {NAV_LINKS.map((link) => {
                             const active = isActive(link)
                             return (
@@ -97,22 +55,62 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
                                     type='button'
                                     disabled={active}
                                     aria-current={active ? 'page' : undefined}
-                                    onClick={
-                                        active
-                                            ? undefined
-                                            : () => {
-                                                  setOpen(false)
-                                                  navigate(link.href)
-                                              }
-                                    }
-                                    className={`text-white text-lg font-bold text-left py-2 border-t border-white/10 first:border-t-0 ${active ? 'opacity-100 cursor-default' : 'cursor-pointer'}`}
+                                    onClick={active ? undefined : () => navigate(link.href)}
+                                    className={`text-white text-lg font-bold transition-opacity duration-300 ${active ? 'opacity-100 cursor-default' : 'opacity-65 cursor-pointer hover:opacity-100'}`}
                                 >
                                     {link.label}
                                 </button>
                             )
                         })}
                     </nav>
+
+                    {/* Hamburger toggle */}
+                    <button
+                        type='button'
+                        aria-label={open ? 'Close menu' : 'Open menu'}
+                        aria-expanded={open}
+                        onClick={() => setOpen((v) => !v)}
+                        className='md:hidden flex flex-col justify-center items-center gap-[5px] w-10 h-10 shrink-0 -mr-1'
+                    >
+                        <span
+                            className={`block h-[2px] w-6 bg-white transition-transform duration-300 ${open ? 'translate-y-[7px] rotate-45' : ''}`}
+                        />
+                        <span
+                            className={`block h-[2px] w-6 bg-white transition-opacity duration-300 ${open ? 'opacity-0' : 'opacity-100'}`}
+                        />
+                        <span
+                            className={`block h-[2px] w-6 bg-white transition-transform duration-300 ${open ? '-translate-y-[7px] -rotate-45' : ''}`}
+                        />
+                    </button>
                 </div>
+
+                {/* Mobile menu */}
+                <nav
+                    className={`md:hidden flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${open ? 'max-h-60 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}
+                >
+                    {NAV_LINKS.map((link) => {
+                        const active = isActive(link)
+                        return (
+                            <button
+                                key={link.href}
+                                type='button'
+                                disabled={active}
+                                aria-current={active ? 'page' : undefined}
+                                onClick={
+                                    active
+                                        ? undefined
+                                        : () => {
+                                            setOpen(false)
+                                            navigate(link.href)
+                                        }
+                                }
+                                className={`text-white text-lg font-bold text-left py-2 border-t border-white/10 first:border-t-0 ${active ? 'opacity-100 cursor-default' : 'cursor-pointer'}`}
+                            >
+                                {link.label}
+                            </button>
+                        )
+                    })}
+                </nav>
             </div>
         </div>
     )
