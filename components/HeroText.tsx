@@ -135,7 +135,7 @@ export default function HeroText() {
         {/* Reads as one sentence continuing out of the headline above, so the
             lowercase start and the missing period are deliberate: the thought
             closes on "end to end", not here. */}
-        <p className="text-xl! sm:text-2xl! text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.65)]">
+        <p className="-mt-4 text-lg! sm:text-xl! text-white/50 [text-shadow:0_2px_16px_rgba(0,0,0,0.65)] font-mono">
           That Actually Scalable, Functional and Maintainable from End to End
         </p>
 
