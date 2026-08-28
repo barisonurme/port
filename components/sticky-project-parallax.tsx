@@ -57,6 +57,10 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   const tiltIndexRef = useRef(0);
   const sectionOnScreenRef = useRef(false);
   const pointerRef = useRef({ nx: 0, ny: 0 });
+  // On phones / coarse pointers the per-frame tilt (three gsap.to targets on
+  // every ScrollTrigger update) is the main scroll-jank source, so it's skipped
+  // there entirely — the cards just slide and rotate on scroll.
+  const isMobileRef = useRef(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const overlayImgRef = useRef<HTMLImageElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -80,11 +84,21 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Track "is this a phone / touch device" for skipping the 3D tilt.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px), (pointer: coarse)");
+    const update = () => { isMobileRef.current = mq.matches; };
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   // Drive one card's three planes from a normalized cursor position (nx/ny in
   // -0.5…0.5). Called from a global pointermove, so the tilt tracks the mouse
   // anywhere on screen — not only while hovering the card. Passing nx = ny = 0
   // settles the card back to flat.
   const applyTilt = useCallback((i: number, nx: number, ny: number) => {
+    if (isMobileRef.current) return;
     // Background frame — gentle tilt on a deep perspective; nothing clips it.
     const frame = frameRefs.current[i];
     if (frame) {
@@ -512,7 +526,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
               onMouseMove={handleCardMouseMove}
               onMouseEnter={handleCardMouseEnter}
               onMouseLeave={handleCardMouseLeave}
-              className="group absolute top-1/2 left-1/2 w-[90vw] h-[82vh] cursor-none"
+              className="group absolute top-1/2 left-1/2 w-[94vw] h-[86vh] md:w-[90vw] md:h-[82vh] cursor-none"
               style={{ zIndex: i + 1 }}
             >
               {/* Plane 1 — background frame. Own element, own rounding, nothing clips
@@ -522,7 +536,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                 ref={(el) => {
                   frameRefs.current[i] = el;
                 }}
-                className="absolute inset-0 rounded-2xl bg-black/10 backdrop-blur-3xl"
+                className="absolute inset-0 rounded-xl md:rounded-2xl bg-black/20 backdrop-blur-sm md:bg-black/10 md:backdrop-blur-3xl"
               />
 
               {/* Plane 2 — image panel. Own element inset by the frame's border; clips
@@ -531,7 +545,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                 ref={(el) => {
                   panelRefs.current[i] = el;
                 }}
-                className="absolute inset-4 rounded-xl overflow-hidden"
+                className="absolute inset-2 md:inset-4 rounded-lg md:rounded-xl overflow-hidden"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -564,7 +578,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                 ref={(el) => {
                   infoRefs.current[i] = el;
                 }}
-                className="absolute top-12 left-12 right-12 text-white select-none pointer-events-none"
+                className="absolute top-6 left-6 right-6 md:top-12 md:left-12 md:right-12 text-white select-none pointer-events-none"
                 style={{ opacity: 0 }}
               >
                 {(card.year || card.category) && (
