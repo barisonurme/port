@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { MeshTransmissionMaterial } from "@react-three/drei";
 import { usePageTransition } from "@/components/transition-provider";
@@ -45,7 +45,18 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   const navigate = usePageTransition();
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Three independent planes per card — no shared clipping parent, so each can
+  // tilt on its own without the others (or a wrapper) slicing its edges.
+  const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const infoRefs = useRef<(HTMLDivElement | null)[]>([]);
   const activeIndexRef = useRef(0);
+  // Global pointer → 3D tilt: which card owns the tilt right now, whether the
+  // section is on screen at all, and the last normalized cursor position so a
+  // newly-activated card can snap to it without waiting for the next move.
+  const tiltIndexRef = useRef(0);
+  const sectionOnScreenRef = useRef(false);
+  const pointerRef = useRef({ nx: 0, ny: 0 });
   const overlayRef = useRef<HTMLDivElement>(null);
   const overlayImgRef = useRef<HTMLImageElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -54,9 +65,95 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   const overCloseRef = useRef(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  // At the very top of the page the first card only peeks under the hero, so a
+  // click there scrolls the section in rather than opening a project — and the
+  // hover cursor points down instead of up-right to say so.
+  const [atPageTop, setAtPageTop] = useState(true);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    const onScroll = () => setAtPageTop(window.scrollY < 250);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Drive one card's three planes from a normalized cursor position (nx/ny in
+  // -0.5…0.5). Called from a global pointermove, so the tilt tracks the mouse
+  // anywhere on screen — not only while hovering the card. Passing nx = ny = 0
+  // settles the card back to flat.
+  const applyTilt = useCallback((i: number, nx: number, ny: number) => {
+    // Background frame — gentle tilt on a deep perspective; nothing clips it.
+    const frame = frameRefs.current[i];
+    if (frame) {
+      gsap.to(frame, {
+        rotateX: -ny * 5,
+        rotateY: nx * 7,
+        transformPerspective: 1600,
+        duration: 0.6,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    }
+
+    // Image panel + card text — a separate plane, stronger tilt and a
+    // counter-shift on a tighter perspective, floating above the frame.
+    const rx = -ny * 11;
+    const ry = nx * 14;
+    const tx = nx * -10;
+    const ty = ny * -10;
+    const flat = nx === 0 && ny === 0;
+
+    const panel = panelRefs.current[i];
+    if (panel) {
+      gsap.to(panel, {
+        rotateX: rx,
+        rotateY: ry,
+        x: tx,
+        y: ty,
+        scale: flat ? 1 : 1.04,
+        transformPerspective: 1100,
+        duration: 0.7,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    }
+
+    const info = infoRefs.current[i];
+    if (info) {
+      gsap.to(info, {
+        rotateX: rx,
+        rotateY: ry,
+        x: tx,
+        y: ty,
+        transformPerspective: 1100,
+        duration: 0.7,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    }
+  }, []);
+
+  // Global pointer tracking: tilt the active card wherever the mouse is.
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType && e.pointerType !== "mouse") return;
+      const nx = e.clientX / window.innerWidth - 0.5;
+      const ny = e.clientY / window.innerHeight - 0.5;
+      pointerRef.current = { nx, ny };
+      if (sectionOnScreenRef.current) applyTilt(tiltIndexRef.current, nx, ny);
+    };
+    const onLeave = () => applyTilt(tiltIndexRef.current, 0, 0);
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
+    };
+  }, [applyTilt]);
 
   // Scroll-based parallax animations
   useEffect(() => {
@@ -74,6 +171,16 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
 
       // Center each card; off-screen cards start below (y = vh)
       gsap.set(card, { xPercent: -50, yPercent: -50, y: i > 0 ? vh : 0 });
+
+      // Baseline for the pointer-driven 3D tilt. Frame, image panel and text are
+      // separate planes with no clipping wrapper, so each rotates freely and
+      // shows its full rounded shape.
+      const frame = frameRefs.current[i];
+      if (frame) gsap.set(frame, { transformOrigin: "center" });
+      const panel = panelRefs.current[i];
+      if (panel) gsap.set(panel, { transformOrigin: "center" });
+      const infoEl = infoRefs.current[i];
+      if (infoEl) gsap.set(infoEl, { transformOrigin: "center" });
 
       if (i > 0) {
         gsap.to(card, {
@@ -138,6 +245,37 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
       }
     });
 
+    // Keep the global-pointer tilt pointed at the right card, and let it idle
+    // while the section is off screen.
+    ScrollTrigger.create({
+      trigger: container,
+      scroller: scrollerEl,
+      start: "top bottom",
+      end: "bottom top",
+      onToggle: (self) => {
+        sectionOnScreenRef.current = self.isActive;
+        if (!self.isActive) applyTilt(tiltIndexRef.current, 0, 0);
+      },
+    });
+
+    ScrollTrigger.create({
+      trigger: container,
+      scroller: scrollerEl,
+      start: "top top",
+      end: `+=${Math.max(numCards - 1, 1) * vh}`,
+      scrub: true,
+      onUpdate: (self) => {
+        const idx = numCards > 1 ? Math.round(self.progress * (numCards - 1)) : 0;
+        if (idx === tiltIndexRef.current) return;
+        // Hand the tilt over: settle the card we're leaving, snap the new one
+        // to wherever the cursor already is.
+        applyTilt(tiltIndexRef.current, 0, 0);
+        tiltIndexRef.current = idx;
+        const { nx, ny } = pointerRef.current;
+        applyTilt(idx, nx, ny);
+      },
+    });
+
     if (onActiveChange) {
       activeIndexRef.current = -1;
 
@@ -195,6 +333,18 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   }, [scroller, activeLead]);
 
   const openCard = useCallback((index: number) => {
+    // From the top of the home page, the card is just a scroll cue — send the
+    // section to the top of the viewport (pins it, card 0 centered) instead of
+    // opening. Uses the same Lenis bridge as the hero buttons.
+    if (window.scrollY < 10) {
+      const container = containerRef.current;
+      if (container) {
+        const top = container.getBoundingClientRect().top + document.documentElement.scrollTop;
+        window.dispatchEvent(new CustomEvent("smooth-scroll-to", { detail: { top } }));
+      }
+      return;
+    }
+
     const href = CARDS[index]?.href;
     if (href) {
       navigate(href);
@@ -326,11 +476,12 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   );
 
   // Custom arrow cursor for the card previews
-  const handleCardMouseMove = useCallback((e: React.MouseEvent) => {
+  const handleCardMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const cursor = cardCursorRef.current;
-    if (!cursor) return;
-    cursor.style.left = `${e.clientX}px`;
-    cursor.style.top = `${e.clientY}px`;
+    if (cursor) {
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
+    }
   }, []);
 
   const handleCardMouseEnter = useCallback(() => {
@@ -350,7 +501,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
         className="relative"
         style={{ height: `${CARDS.length * 100}vh` }}
       >
-        <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
+        <div className="sticky top-0 h-screen flex items-center justify-center overflow-clip [overflow-clip-margin:4rem]">
           {CARDS.map((card, i) => (
             <div
               key={card.id}
@@ -361,79 +512,100 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
               onMouseMove={handleCardMouseMove}
               onMouseEnter={handleCardMouseEnter}
               onMouseLeave={handleCardMouseLeave}
-              className="group absolute top-1/2 left-1/2 w-[90vw] h-[82vh] rounded-2xl overflow-hidden cursor-none"
+              className="group absolute top-1/2 left-1/2 w-[90vw] h-[82vh] cursor-none"
               style={{ zIndex: i + 1 }}
             >
-              <div className="absolute inset-0 p-4 bg-black/5 backdrop-blur-3xl">
+              {/* Plane 1 — background frame. Own element, own rounding, nothing clips
+                  it. No backdrop-blur here: it gets a 3D transform, and
+                  backdrop-filter + 3D transform paints a solid grey in Chrome. */}
+              <div
+                ref={(el) => {
+                  frameRefs.current[i] = el;
+                }}
+                className="absolute inset-0 rounded-2xl bg-black/10 backdrop-blur-3xl"
+              />
 
+              {/* Plane 2 — image panel. Own element inset by the frame's border; clips
+                  only its own photo, so it can tilt harder without a gap. */}
+              <div
+                ref={(el) => {
+                  panelRefs.current[i] = el;
+                }}
+                className="absolute inset-4 rounded-xl overflow-hidden"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={card.image}
                   alt={card.label}
-                  className="w-full h-full object-cover transition-[filter] duration-500 ease-out rounded-xl"
+                  className="w-full h-full object-cover transition-[filter] duration-500 ease-out"
                 />
                 <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/30" />
-                {/* Linear scrim over the bottom third on mobile, under the card text. */}
+                {/* Linear scrim over the top third on mobile, under the card text. */}
                 <div
                   className="absolute inset-0 pointer-events-none md:hidden"
                   style={{
                     background:
-                      "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 12%, rgba(0,0,0,0.25) 24%, rgba(0,0,0,0) 33%)",
+                      "linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 12%, rgba(0,0,0,0.25) 24%, rgba(0,0,0,0) 33%)",
                   }}
                 />
-                {/* Radial scrim anchored to the bottom-left corner, under the card text. */}
+                {/* Radial scrim anchored to the top-left corner, under the card text. */}
                 <div
                   className="absolute inset-0 pointer-events-none hidden md:block"
                   style={{
                     background:
-                      "radial-gradient(circle farthest-side at 0% 100%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
+                      "radial-gradient(circle farthest-side at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
                   }}
                 />
-                <div
-                  data-card-info
-                  className="absolute bottom-8 left-8 right-8 text-white select-none pointer-events-none"
-                  style={{ opacity: 0 }}
-                >
-                  {(card.year || card.category) && (
-                    <div
-                      data-card-meta
-                      className="mb-3 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-white/60"
-                    >
-                      {card.year && <span>{card.year}</span>}
-                      {card.year && card.category && <span className="h-px w-6 bg-white/40" />}
-                      {card.category && <span>{card.category}</span>}
-                    </div>
-                  )}
+              </div>
 
-                  <h3
-                    className="font-light leading-[1.05]"
-                    style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+              {/* Plane 3 — card text. Rides the image panel's tilt. */}
+              <div
+                data-card-info
+                ref={(el) => {
+                  infoRefs.current[i] = el;
+                }}
+                className="absolute top-12 left-12 right-12 text-white select-none pointer-events-none"
+                style={{ opacity: 0 }}
+              >
+                {(card.year || card.category) && (
+                  <div
+                    data-card-meta
+                    className="mb-3 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-white/60"
                   >
-                    {card.label.split(" ").map((word, w, words) => (
-                      <span
-                        key={w}
-                        className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]"
-                      >
-                        {Array.from(word).map((ch, c) => (
-                          <span key={c} data-card-char className="inline-block">
-                            {ch}
-                          </span>
-                        ))}
-                        {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
-                      </span>
-                    ))}
-                  </h3>
+                    {card.year && <span>{card.year}</span>}
+                    {card.year && card.category && <span className="h-px w-6 bg-white/40" />}
+                    {card.category && <span>{card.category}</span>}
+                  </div>
+                )}
 
-                  {card.description && (
-                    <p
-                      data-card-desc
-                      className="mt-4 max-w-xl font-light leading-relaxed text-white/70"
-                      style={{ fontSize: "clamp(0.85rem, 1.15vw, 1.05rem)" }}
+                <h3
+                  className="font-light leading-[1.05]"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+                >
+                  {card.label.split(" ").map((word, w, words) => (
+                    <span
+                      key={w}
+                      className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]"
                     >
-                      {card.description}
-                    </p>
-                  )}
-                </div>
+                      {Array.from(word).map((ch, c) => (
+                        <span key={c} data-card-char className="inline-block">
+                          {ch}
+                        </span>
+                      ))}
+                      {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
+                    </span>
+                  ))}
+                </h3>
+
+                {card.description && (
+                  <p
+                    data-card-desc
+                    className="mt-4 max-w-xl font-light leading-relaxed text-white/70"
+                    style={{ fontSize: "clamp(0.85rem, 1.15vw, 1.05rem)" }}
+                  >
+                    {card.description}
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -524,7 +696,11 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
             className="fixed pointer-events-none z-300 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-14 h-14 rounded-full bg-white opacity-0"
             style={{ top: -100, left: -100 }}
           >
-            <ArrowUpRight className="text-zinc-950" size={22} strokeWidth={1.5} />
+            {atPageTop ? (
+              <ArrowDown className="text-zinc-950" size={22} strokeWidth={1.5} />
+            ) : (
+              <ArrowUpRight className="text-zinc-950" size={22} strokeWidth={1.5} />
+            )}
           </div>
         </>,
         document.body
