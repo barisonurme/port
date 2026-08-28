@@ -223,20 +223,18 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       >
         {/* Uses `navigate` directly rather than <TransitionLink> — that
             component imports this one, and the header re-enabling pointer
-            events is the only thing it needs. On the homepage it stays an
-            inert wordmark: no cursor, no hover, no re-navigation. */}
-        <button
-          type="button"
-          disabled={pathname === '/'}
-          onClick={() => navigate('/')}
-          aria-label="Home"
-          className={cn(
-            'text-sm font-mono tracking-widest uppercase opacity-65 transition-opacity duration-300',
-            pathname !== '/' && 'pointer-events-auto cursor-pointer hover:opacity-100'
-          )}
-        >
-          barisonurme
-        </button>
+            events is the only thing it needs. Hidden entirely on the
+            homepage, since there's nowhere for it to navigate. */}
+        {pathname !== '/' && (
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            aria-label="Home"
+            className="text-sm font-mono tracking-widest uppercase opacity-65 transition-opacity duration-300 pointer-events-auto cursor-pointer hover:opacity-100"
+          >
+            barisonurme
+          </button>
+        )}
       </header>
       {children}
       {/* Sits below the strips (z 9999) so page transitions and the initial

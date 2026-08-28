@@ -196,6 +196,27 @@ const projectContent: Record<number, ReactNode> = {
         </div>
 
     ),
+    5: (
+        <div className="mt-10 space-y-10">
+            <div>
+                <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Highlights</p>
+                <ul className="space-y-2 text-white/55 text-sm font-light">
+                    <li>— Built a tap-to-shoot free-throw mechanic driven entirely by Rigidbody force/torque, with per-zone colliders on the rim, backboard, and floor deciding swish, bank-shot, or miss without a dedicated physics state machine</li>
+                    <li>— Wrote a shader-driven dissolve system for ball skins around a custom <code>_kontrol</code> material property, animated through hand-rolled coroutines and DOTween float tweens, so equipping, previewing, and unlocking a skin all share the same disintegrate/reform transition</li>
+                    <li>— Designed a 27-level progression system where each level&apos;s difficulty — moving rim, obstacle presence, obstacle movement, coin drop rate — is derived from the level index and persisted through PlayerPrefs, with staggered lock/unlock animations cascading across the level-select grid</li>
+                    <li>— Layered rim shake, camera shake, and panel-fade feedback entirely through chained DOTween tweens and <code>OnComplete</code> callbacks, keeping juice code out of animator controllers and coroutine state</li>
+                    <li>— Built a coin economy with drop-rate scaling by difficulty tier, spawn/despawn tied to score events, and a reusable floating +/− text popup shared between pickups and level-complete rewards</li>
+                    <li>— Wired AdMob for monetization and built a raycast-based click logger that reports every UI element and 3D collider under a tap, used to debug overlapping hit areas while laying out the shot colliders</li>
+                </ul>
+            </div>
+            <Button asChild className='px-4 md:px-12 text-white hover:opacity-90' style={{ backgroundColor: "#F39E0A" }}>
+                <a href="https://www.youtube.com/watch?v=20E38xpgcD8" target="_blank" rel="noopener noreferrer">Watch Gameplay</a>
+            </Button>
+        </div>
+
+
+    ),
+
 };
 
 const TITLE_FONT = "clamp(4rem, 14vw, 13rem)";

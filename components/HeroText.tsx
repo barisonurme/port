@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowDown } from 'lucide-react';
 import { TransitionLink } from '@/components/transition-link';
 import { SlideButton } from './ui/slide-button';
 import WarpTextBlock from './WarpTextBlock';
@@ -10,7 +9,6 @@ import WarpTextBlock from './WarpTextBlock';
 export default function HeroText() {
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const arrowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -48,14 +46,6 @@ export default function HeroText() {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    const arrowBounce = gsap.to(arrowRef.current, {
-      y: 14,
-      duration: 0.9,
-      ease: 'power1.inOut',
-      yoyo: true,
-      repeat: -1,
-    });
-
     gsap.to(el, {
       scale: 3,
       opacity: 0,
@@ -73,7 +63,6 @@ export default function HeroText() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       loopTween.kill();
-      arrowBounce.kill();
       ScrollTrigger.getAll().forEach(t => {
         if (t.vars.trigger === trigger) t.kill();
       });
@@ -145,10 +134,6 @@ export default function HeroText() {
             <SlideButton icon={false}>Projects</SlideButton>
           </TransitionLink>
         </div>
-      </div>
-
-      <div ref={arrowRef} className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/65">
-        <ArrowDown size={48} strokeWidth={1.25} />
       </div>
     </div>
   );

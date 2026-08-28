@@ -9,11 +9,10 @@ import { StickyProjectParallax } from "@/components/sticky-project-parallax";
 import { projects } from "@/lib/projects-data";
 import Grainient from "@/components/Grainient";
 import DotGrid from "@/components/DotGrid";
+import Header from "@/components/header";
+import { IDLE_PALETTE } from "@/lib/palette";
 
-const FALLBACK_COLOR = "#007AFF";
-
-/** Colors the background drifts through while no project is active. */
-const IDLE_PALETTE = ["#007AFF", "#FF5B3F", "#4CD18F", "#007AFF", "#F39E0A", "#B14CFF"];
+const FALLBACK_COLOR = "#EA285E";
 /** Seconds held on a color before fading, and the fade itself. */
 const IDLE_HOLD = 2.5;
 const IDLE_FADE = 3;
@@ -37,7 +36,7 @@ function rgbToHex({ r, g, b }: { r: number; g: number; b: number }) {
 }
 
 const featuredProjects = projects.filter((p) => p.featured);
-const initialColor = "#007AFF";
+const initialColor = "#EA285E";
 
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);
@@ -121,30 +120,35 @@ export default function Home() {
   return (
     <main className="relative">
 
+      <Header color={bgColor} />
       <div className="fixed inset-0 z-0">
         <Grainient color1="#000000" color2={bgColor} color3="#000000" />
       </div>
 
+
       {/* Interactive dot field sitting on top of the gradient, behind all content. */}
       {dotsMounted && (
-      <div className="fixed inset-0 opacity-50 pointer-events-none">
-        <DotGrid
-          dotSize={1}
-          gap={28}
-          baseColor={bgColor}
-          activeColor={bgColor}
-          proximity={140}
-          shockRadius={260}
-          shockStrength={4}
-          resistance={750}
-          returnDuration={1.4}
-        />
-      </div>
+        <div className="fixed inset-0 opacity-50 pointer-events-none">
+          <DotGrid
+            dotSize={1}
+            gap={28}
+            baseColor={bgColor}
+            activeColor={bgColor}
+            proximity={140}
+            shockRadius={260}
+            shockStrength={4}
+            resistance={750}
+            returnDuration={1.4}
+          />
+        </div>
       )}
 
+      {/* Hero is intentionally short of a full viewport so the first
+          StickyProjectParallax card peeks in at the bottom (~20%) as the
+          scroll cue — replaces the old down arrow. Tune HERO_VH to taste. */}
       <div data-hero-trigger className="relative w-full">
         <section className="sticky top-0 flex items-center justify-center z-10 w-full overflow-hidden">
-          <div className="h-screen flex items-center justify-center w-full z-999">
+          <div className="h-[75vh] flex items-center justify-center w-full z-999">
             <HeroText />
           </div>
         </section>

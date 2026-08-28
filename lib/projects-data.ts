@@ -60,6 +60,19 @@ export const projects: ProjectMeta[] = [
         image: "/stream-iq/cover.png",
         featured: true,
         color: "#F39E0A",
-    }
+    },
+    {
+        id: 5,
+        title: "Mini Basket",
+        year: "2026",
+        category: "Mobile Game",
+        description:
+            "A physics-based mobile free-throw game built in Unity. Tap-to-shoot mechanics driven by Rigidbody force and torque, with a 27-level progression system that scales difficulty through moving rims, obstacles, and coin drop rates. Features a shader-driven ball skin system with dissolve transitions, a coin economy with unlockable rewards, and DOTween-based UI and physics feedback (rim shake, camera shake, panel animations) throughout.",
+        tech: ["Unity", "C#", "URP", "DOTween", "TextMesh Pro", "AdMob"],
+        image: "/minibasketball/minibasket.jpg",
+        featured: true,
+        color: "#F39E0A",
+    },
+
 
 ];
