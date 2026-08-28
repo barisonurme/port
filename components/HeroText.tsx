@@ -31,7 +31,9 @@ export default function HeroText() {
     const introTween = gsap.fromTo(
       inner,
       { autoAlpha: 0, filter: 'blur(24px)' },
-      { autoAlpha: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power2.out', paused: true }
+      // First of the staggered intros: text 0s, header slides in from top +0.5s,
+      // project stack rises from the bottom +1s.
+      { autoAlpha: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power2.out', delay: 0, paused: true }
     );
     introRef.current = introTween;
 

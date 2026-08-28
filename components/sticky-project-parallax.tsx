@@ -7,7 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowDown, ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { MeshTransmissionMaterial } from "@react-three/drei";
-import { usePageTransition } from "@/components/transition-provider";
+import { usePageTransition, useInitialLoading } from "@/components/transition-provider";
 import { SlideButton } from "@/components/ui/slide-button";
 
 function GlassSphere() {
@@ -43,7 +43,9 @@ const ACTIVE_LEAD_VH = 0.75;
 
 export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeLead = ACTIVE_LEAD_VH }: { CARDS: CARDS; scroller?: { current: HTMLElement | null }; onActiveChange?: (index: number) => void; activeLead?: number }) {
   const navigate = usePageTransition();
+  const initialLoading = useInitialLoading();
   const containerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   // Three independent planes per card — no shared clipping parent, so each can
   // tilt on its own without the others (or a wrapper) slicing its edges.
@@ -168,6 +170,48 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
       document.removeEventListener("mouseleave", onLeave);
     };
   }, [applyTilt]);
+
+  // Blur + fade the whole pinned stack in, rising from the bottom. Created
+  // paused at mount so the hidden state is set before first paint (no flash),
+  // then played once the initial loading screen is gone — see the
+  // [initialLoading] effect below.
+  const introRef = useRef<gsap.core.Tween | null>(null);
+  useEffect(() => {
+    const sticky = stickyRef.current;
+    if (!sticky) return;
+
+    const intro = gsap.fromTo(
+      sticky,
+      { autoAlpha: 0, filter: "blur(24px)", y: 120 },
+      {
+        autoAlpha: 1,
+        filter: "blur(0px)",
+        y: 0,
+        duration: 1.2,
+        ease: "power3.out",
+        // Last of the staggered intros: text 0s, header +0.5s, project stack +1s.
+        // The delay counts from play(), so it stays anchored to the loader wipe.
+        delay: 1,
+        paused: true,
+        // Drop the filter entirely once revealed — a lingering `filter` on this
+        // ancestor rasterizes the subtree and kills the cards' own backdrop-blur.
+        onComplete: () => gsap.set(sticky, { filter: "none" }),
+      }
+    );
+    introRef.current = intro;
+
+    return () => {
+      intro.kill();
+      introRef.current = null;
+    };
+  }, []);
+
+  // Play the intro once the loader is gone, from the same moment the header/hero
+  // intros start. On a client-side nav there's no loader, so initialLoading is
+  // already false on mount and it plays right away.
+  useEffect(() => {
+    if (!initialLoading) introRef.current?.play();
+  }, [initialLoading]);
 
   // Scroll-based parallax animations
   useEffect(() => {
@@ -526,7 +570,10 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
         className="relative"
         style={{ height: `${CARDS.length * 100}vh` }}
       >
-        <div className="sticky top-0 h-screen flex items-center justify-center overflow-clip [overflow-clip-margin:4rem]">
+        <div
+          ref={stickyRef}
+          className="sticky top-0 h-screen flex items-center justify-center overflow-clip [overflow-clip-margin:4rem]"
+        >
           {CARDS.map((card, i) => (
             <div
               key={card.id}

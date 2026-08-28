@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { usePageTransition } from '@/components/transition-provider'
+import gsap from 'gsap'
+import { usePageTransition, useInitialLoading } from '@/components/transition-provider'
 
 const Logo = ({ color }: { color: string }) => (
     <svg
@@ -27,11 +28,39 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
     const [open, setOpen] = useState(false)
     const navigate = usePageTransition()
     const pathname = usePathname()
+    const initialLoading = useInitialLoading()
+    const rootRef = useRef<HTMLDivElement>(null)
+    const introRef = useRef<gsap.core.Tween | null>(null)
     const isActive = (link: (typeof NAV_LINKS)[number]) =>
         link.match.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
+    // Blur + fade the header in, mirroring the hero. Created paused so it can
+    // wait out the initial loading screen (see the [initialLoading] effect).
+    useEffect(() => {
+        const el = rootRef.current
+        if (!el) return
+        const intro = gsap.fromTo(
+            el,
+            { autoAlpha: 0, filter: 'blur(24px)', y: -80 },
+            // Second of the staggered intros: text 0s, header slides down from the
+            // top +0.5s, project stack rises from the bottom +1s.
+            { autoAlpha: 1, filter: 'blur(0px)', y: 0, duration: 1.2, ease: 'power3.out', delay: 0.5, paused: true }
+        )
+        introRef.current = intro
+        return () => {
+            intro.kill()
+            introRef.current = null
+        }
+    }, [])
+
+    // On a client-side nav there's no loader, so initialLoading is already
+    // false on mount and the intro plays immediately.
+    useEffect(() => {
+        if (!initialLoading) introRef.current?.play()
+    }, [initialLoading])
+
     return (
-        <div className='flex justify-center items-center w-full top-0 p-4 pt-6 sm:p-8 sm:pt-8 md:p-24 md:pt-10 z-5000 absolute'>
+        <div ref={rootRef} className='flex justify-center items-center w-full top-0 p-4 pt-6 sm:p-8 sm:pt-8 md:p-24 md:pt-10 z-5000 absolute'>
             <div className='border-l border-t flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/30 p-3 px-4 md:p-8 md:px-12 rounded-[16px] shadow-xl border-white/20'>
                 <div className='flex justify-between  items-center w-full h-full gap-2'>
                     <button

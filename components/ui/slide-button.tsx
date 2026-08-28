@@ -10,7 +10,7 @@ function SlideButton({ children, icon, className, ...props }: SlideButtonProps) 
   return (
     <button
       className={cn(
-        'group relative flex items-center gap-3 overflow-hidden border border-white/20 hover:border-white/50 px-8 py-4 text-sm uppercase tracking-widest text-white/50 hover:text-zinc-950 transition-colors duration-500 cursor-pointer',
+        'rounded-full group relative flex items-center gap-3 overflow-hidden border border-white/20 hover:border-white/50 px-8 py-4 text-sm uppercase tracking-widest text-white/50 hover:text-zinc-950 transition-colors duration-500 cursor-pointer',
         className
       )}
       {...props}
