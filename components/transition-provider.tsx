@@ -41,26 +41,38 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
 
+    // Skip Lenis on phones / touch devices: its rAF loop plus a synchronous
+    // ScrollTrigger.update on every native scroll event is the main mobile
+    // scroll-jank source with the pinned parallax section. Native scrolling
+    // + ScrollTrigger's own scroll listener is smoother there.
+    const isMobile = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
+    if (isMobile) return
+
     const lenis = new Lenis()
     lenisRef.current = lenis
 
     lenis.on('scroll', ScrollTrigger.update)
-    gsap.ticker.add((time) => lenis.raf(time * 1000))
+    const raf = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(raf)
     gsap.ticker.lagSmoothing(0)
 
     return () => {
-      gsap.ticker.remove((time) => lenis.raf(time * 1000))
+      gsap.ticker.remove(raf)
       lenis.destroy()
+      lenisRef.current = null
     }
   }, [])
 
   useEffect(() => {
-    lenisRef.current?.scrollTo(0, { immediate: true })
+    if (lenisRef.current) lenisRef.current.scrollTo(0, { immediate: true })
+    else window.scrollTo(0, 0)
   }, [pathname])
 
   useEffect(() => {
     const onScrollTo = (e: Event) => {
-      lenisRef.current?.scrollTo((e as CustomEvent<{ top: number }>).detail.top)
+      const { top } = (e as CustomEvent<{ top: number }>).detail
+      if (lenisRef.current) lenisRef.current.scrollTo(top)
+      else window.scrollTo({ top, behavior: 'smooth' })
     }
     window.addEventListener('smooth-scroll-to', onScrollTo)
     return () => window.removeEventListener('smooth-scroll-to', onScrollTo)
