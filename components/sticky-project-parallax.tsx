@@ -578,7 +578,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                   className="absolute inset-0 pointer-events-none hidden md:block"
                   style={{
                     background:
-                      "radial-gradient(circle farthest-side at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
+                      "radial-gradient(circle farthest-side at 0% 0%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 25%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 80%)",
                   }}
                 />
               </div>
