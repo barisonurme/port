@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Syne } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TransitionProvider } from "@/components/transition-provider";
+import { SiteHeader } from "@/components/site-header";
 
 const syne = Syne({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -45,7 +46,10 @@ export default function RootLayout({
             __html: `document.documentElement.classList.add('js')`,
           }}
         />
-        <TransitionProvider>{children}</TransitionProvider>
+        <TransitionProvider>
+          <SiteHeader />
+          {children}
+        </TransitionProvider>
       </body>
     </html>
   );

@@ -5,7 +5,6 @@ import gsap from 'gsap';
 import { ArrowDownToLine } from 'lucide-react';
 import { ContactSection } from '@/components/ContactSection';
 import { cv } from '@/lib/cv-data';
-import { OutlineText } from '@/components/ui/outline-text';
 
 const GRAIN_SVG =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
@@ -44,7 +43,7 @@ export default function CVPage() {
       <div className="cv-sheet mx-auto max-w-6xl px-10 sm:px-16 pt-28 pb-28">
         {/* Name block */}
         <header className="mb-14">
-          <div className="overflow-hidden leading-[0.95]">
+          <div className="overflow-hidden leading-[0.95] mt-24">
             <h1
               className="cv-word cv-name inline-block font-semibold text-white"
               style={{ fontSize: 'clamp(2.6rem, 8vw, 6.5rem)' }}

@@ -364,73 +364,76 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
               className="group absolute top-1/2 left-1/2 w-[90vw] h-[82vh] rounded-2xl overflow-hidden cursor-none"
               style={{ zIndex: i + 1 }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={card.image}
-                alt={card.label}
-                className="w-full h-full object-cover transition-[filter] duration-500 ease-out"
-              />
-              <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/30" />
-              {/* Linear scrim over the bottom third on mobile, under the card text. */}
-              <div
-                className="absolute inset-0 pointer-events-none md:hidden"
-                style={{
-                  background:
-                    "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 12%, rgba(0,0,0,0.25) 24%, rgba(0,0,0,0) 33%)",
-                }}
-              />
-              {/* Radial scrim anchored to the bottom-left corner, under the card text. */}
-              <div
-                className="absolute inset-0 pointer-events-none hidden md:block"
-                style={{
-                  background:
-                    "radial-gradient(circle farthest-side at 0% 100%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
-                }}
-              />
-              <div
-                data-card-info
-                className="absolute bottom-8 left-8 right-8 text-white select-none pointer-events-none"
-                style={{ opacity: 0 }}
-              >
-                {(card.year || card.category) && (
-                  <div
-                    data-card-meta
-                    className="mb-3 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-white/60"
-                  >
-                    {card.year && <span>{card.year}</span>}
-                    {card.year && card.category && <span className="h-px w-6 bg-white/40" />}
-                    {card.category && <span>{card.category}</span>}
-                  </div>
-                )}
+              <div className="absolute inset-0 p-4 bg-black/5 backdrop-blur-3xl">
 
-                <h3
-                  className="font-light leading-[1.05]"
-                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={card.image}
+                  alt={card.label}
+                  className="w-full h-full object-cover transition-[filter] duration-500 ease-out rounded-xl"
+                />
+                <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/30" />
+                {/* Linear scrim over the bottom third on mobile, under the card text. */}
+                <div
+                  className="absolute inset-0 pointer-events-none md:hidden"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 12%, rgba(0,0,0,0.25) 24%, rgba(0,0,0,0) 33%)",
+                  }}
+                />
+                {/* Radial scrim anchored to the bottom-left corner, under the card text. */}
+                <div
+                  className="absolute inset-0 pointer-events-none hidden md:block"
+                  style={{
+                    background:
+                      "radial-gradient(circle farthest-side at 0% 100%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0) 80%)",
+                  }}
+                />
+                <div
+                  data-card-info
+                  className="absolute bottom-8 left-8 right-8 text-white select-none pointer-events-none"
+                  style={{ opacity: 0 }}
                 >
-                  {card.label.split(" ").map((word, w, words) => (
-                    <span
-                      key={w}
-                      className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]"
+                  {(card.year || card.category) && (
+                    <div
+                      data-card-meta
+                      className="mb-3 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-white/60"
                     >
-                      {Array.from(word).map((ch, c) => (
-                        <span key={c} data-card-char className="inline-block">
-                          {ch}
-                        </span>
-                      ))}
-                      {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
-                    </span>
-                  ))}
-                </h3>
+                      {card.year && <span>{card.year}</span>}
+                      {card.year && card.category && <span className="h-px w-6 bg-white/40" />}
+                      {card.category && <span>{card.category}</span>}
+                    </div>
+                  )}
 
-                {card.description && (
-                  <p
-                    data-card-desc
-                    className="mt-4 max-w-xl font-light leading-relaxed text-white/70"
-                    style={{ fontSize: "clamp(0.85rem, 1.15vw, 1.05rem)" }}
+                  <h3
+                    className="font-light leading-[1.05]"
+                    style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
                   >
-                    {card.description}
-                  </p>
-                )}
+                    {card.label.split(" ").map((word, w, words) => (
+                      <span
+                        key={w}
+                        className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]"
+                      >
+                        {Array.from(word).map((ch, c) => (
+                          <span key={c} data-card-char className="inline-block">
+                            {ch}
+                          </span>
+                        ))}
+                        {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
+                      </span>
+                    ))}
+                  </h3>
+
+                  {card.description && (
+                    <p
+                      data-card-desc
+                      className="mt-4 max-w-xl font-light leading-relaxed text-white/70"
+                      style={{ fontSize: "clamp(0.85rem, 1.15vw, 1.05rem)" }}
+                    >
+                      {card.description}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           ))}

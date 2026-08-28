@@ -73,7 +73,7 @@ export default function ContactPage() {
         setForm(f => ({ ...f, [field]: e.target.value }));
 
   return (
-    <div ref={containerRef} className="relative min-h-screen bg-zinc-950">
+    <div ref={containerRef} className="relative min-h-screen bg-zinc-950 pt-24">
       {/* Grain overlay */}
       <div
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.035]"
@@ -100,7 +100,7 @@ export default function ContactPage() {
         </div>)
       ) : (
         /* ── Form ────────────────────────────────── */
-        (<div className="px-10 sm:px-16 pt-28 pb-28">
+        (<div className="mx-auto max-w-6xl px-10 sm:px-16 pt-28 pb-28">
           {/* Title */}
           <div className="c-title-area mb-14">
             <p className="c-meta text-white/25 text-xs uppercase tracking-widest mb-5 opacity-0">

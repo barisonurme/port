@@ -25,7 +25,6 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const [isNavPending, startNavTransition] = useTransition()
   const awaitingRevealRef = useRef(false)
   const [initialLoading, setInitialLoading] = useState(true)
-  const [navCovering, setNavCovering] = useState(false)
   const [indeterminate, setIndeterminate] = useState(false)
   const fillRef = useRef<HTMLSpanElement>(null)
   const percentRef = useRef<HTMLSpanElement>(null)
@@ -177,7 +176,6 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       delay: 0.12,
       onComplete: () => {
         isAnimatingRef.current = false
-        setNavCovering(false)
       },
     })
   }, [isNavPending])
@@ -185,13 +183,11 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const navigate = useCallback((href: string) => {
     if (isAnimatingRef.current) return
     isAnimatingRef.current = true
-    setNavCovering(true)
 
     const container = stripsRef.current
     if (!container) {
       startNavTransition(() => router.push(href))
       isAnimatingRef.current = false
-      setNavCovering(false)
       return
     }
 
@@ -211,31 +207,8 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     })
   }, [router, startNavTransition])
 
-  const isCovering = initialLoading || navCovering
-
   return (
     <TransitionContext.Provider value={navigate}>
-      <header
-        className={cn(
-          'fixed top-0 left-0 right-0 z-99999 flex items-center justify-between px-6 py-4 pointer-events-none transition-opacity duration-300',
-          isCovering ? 'opacity-0' : 'opacity-100'
-        )}
-      >
-        {/* Uses `navigate` directly rather than <TransitionLink> — that
-            component imports this one, and the header re-enabling pointer
-            events is the only thing it needs. Hidden entirely on the
-            homepage, since there's nowhere for it to navigate. */}
-        {pathname !== '/' && (
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            aria-label="Home"
-            className="text-sm font-mono tracking-widest uppercase opacity-65 transition-opacity duration-300 pointer-events-auto cursor-pointer hover:opacity-100"
-          >
-            barisonurme
-          </button>
-        )}
-      </header>
       {children}
       {/* Sits below the strips (z 9999) so page transitions and the initial
           loading screen cover it without needing their own hide logic. */}
