@@ -562,9 +562,12 @@ function ProjectsPage() {
         const setTitleY = gsap.quickSetter(title, "y", "px");
         const setImgY = gsap.quickSetter(img, "y", "px");
         const setDetailY = gsap.quickSetter(detail, "y", "px");
+        // Touch: the title is pinned with native `position: sticky` instead.
+        // Keep its transform at 0 so sticky isn't pushed off-position.
+        if (isCoarsePointer) gsap.set(title, { y: 0 });
         const onScroll = () => {
             const s = wrapper.scrollTop;
-            setTitleY(s * 0.8);
+            if (!isCoarsePointer) setTitleY(s * 0.8);
             setImgY(s * 0.1);
             setDetailY(-s * 0.2);
             const blur = Math.min(s * 0.04, 12);
@@ -577,7 +580,7 @@ function ProjectsPage() {
             gsap.set(img, { y: 0, filter: "blur(0px)" });
             gsap.set(detail, { y: 0 });
         };
-    }, [isExpanded]);
+    }, [isExpanded, isCoarsePointer]);
 
     useEffect(() => {
         if (!isExpanded) return;
@@ -863,7 +866,15 @@ function ProjectsPage() {
                 >
                     <h1
                         ref={titleRef}
-                        className="relative z-10 text-white font-light mb-6 leading-none"
+                        className={cn(
+                            "z-10 text-white font-light leading-none",
+                            // Touch: pin with native sticky. Momentum scrolling
+                            // starves the scroll event, so the JS parallax below
+                            // lands in visible jumps and the title won't stay put.
+                            isCoarsePointer
+                                ? "sticky top-0 z-30 bg-zinc-950 pb-6"
+                                : "relative mb-6"
+                        )}
                         style={{ fontSize: TITLE_FONT }}
                     >
                         {activeProject?.title}

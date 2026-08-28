@@ -173,6 +173,17 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    // The mobile URL bar hides on scroll and fires a resize mid-gesture.
+    // Without this, ScrollTrigger recomputes every start/end from the new
+    // innerHeight and the pinned (position: sticky) card stack jumps. Same
+    // idea as the /projects title: don't let JS disturb the native pin.
+    ScrollTrigger.config({ ignoreMobileResize: true });
+    const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+    // Boolean scrub snaps progress to each scroll event; iOS momentum scroll
+    // delivers those in bursts, so the slide/rotate stutters. A small numeric
+    // scrub lets GSAP interpolate on its own ticker between them.
+    const cardScrub: number | boolean = isMobile ? 0.4 : true;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -205,7 +216,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
             scroller: scrollerEl,
             start: `top+=${(i - 1) * vh}px top`,
             end: `top+=${i * vh}px top`,
-            scrub: true,
+            scrub: cardScrub,
           },
         });
       }
@@ -220,7 +231,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
             scroller: scrollerEl,
             start: `top+=${i * vh}px top`,
             end: `top+=${(i + 1) * vh}px top`,
-            scrub: true,
+            scrub: cardScrub,
           },
         });
       }
