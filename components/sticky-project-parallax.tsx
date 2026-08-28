@@ -598,7 +598,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
                     className="mb-3 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-white/60"
                   >
                     {card.year && <span>{card.year}</span>}
-                    {card.year && card.category && <span className="h-px w-6 bg-white/40" />}
+                    {card.year && card.category && <span className="hbg-white/40">|</span>}
                     {card.category && <span>{card.category}</span>}
                   </div>
                 )}
