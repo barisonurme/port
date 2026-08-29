@@ -126,13 +126,12 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
     return (
         <div
             ref={rootRef}
-            className={`flex justify-center items-center w-full top-0 p-4 sm:p-8 md:p-24 z-5000 absolute ${
-                pathname === '/'
+            className={`flex justify-center items-center w-full top-0 p-4 sm:p-8 md:p-24 z-5000 absolute ${pathname === '/'
                     ? 'pt-12 sm:pt-16 md:pt-20'
                     : 'pt-6 sm:pt-8 md:pt-10'
-            }`}
+                }`}
         >
-            <div className='border-l border-t flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/30 p-3 px-4 md:p-8 md:px-12 rounded-[16px] shadow-xl border-white/20'>
+            <div className='border-l border-t flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/30 p-3 px-4 md:p-8 md:px-12 rounded-[24px] shadow-xl border-white/20'>
                 <div className='flex justify-between  items-center w-full h-full gap-2'>
                     <button
                         type='button'

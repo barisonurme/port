@@ -73,6 +73,7 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorIconRef = useRef<HTMLSpanElement>(null);
   const cardCursorRef = useRef<HTMLDivElement>(null);
+  const cueRef = useRef<HTMLDivElement>(null);
   const overCloseRef = useRef(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -168,6 +169,18 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
       // it: settle whatever card was mid-tilt back to flat.
       const { nx, ny } = pointerRef.current;
       applyTilt(tiltIndexRef.current, atTop ? 0 : nx, atTop ? 0 : ny);
+      // Blur the "scroll for projects" cue out on the way in, pop it back
+      // (blur → sharp) when you return to the top.
+      const cue = cueRef.current;
+      if (cue) {
+        gsap.to(cue, {
+          autoAlpha: atTop ? 1 : 0,
+          filter: atTop ? "blur(0px)" : "blur(10px)",
+          y: atTop ? 0 : 8,
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -228,11 +241,46 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
     };
   }, []);
 
+  // Blurred pop-in for the "scroll for projects" cue — same treatment as the
+  // hero / header / stack intros, landing just after the stack. Paused at mount
+  // so it starts hidden (no flash); played from the [initialLoading] effect.
+  const cueIntroRef = useRef<gsap.core.Tween | null>(null);
+  useEffect(() => {
+    const cue = cueRef.current;
+    if (!cue) return;
+
+    const intro = gsap.fromTo(
+      cue,
+      { autoAlpha: 0, filter: "blur(14px)", y: 18 },
+      {
+        autoAlpha: 1,
+        filter: "blur(0px)",
+        y: 0,
+        duration: 1,
+        ease: "power3.out",
+        // After the project stack (which itself starts +1s from the loader wipe).
+        delay: 1.6,
+        paused: true,
+        onComplete: () => gsap.set(cue, { filter: "none" }),
+      }
+    );
+    cueIntroRef.current = intro;
+
+    return () => {
+      intro.kill();
+      cueIntroRef.current = null;
+    };
+  }, []);
+
   // Play the intro once the loader is gone, from the same moment the header/hero
   // intros start. On a client-side nav there's no loader, so initialLoading is
   // already false on mount and it plays right away.
   useEffect(() => {
-    if (!initialLoading) introRef.current?.play();
+    if (!initialLoading) {
+      introRef.current?.play();
+      // Skip the pop-in if the page loaded already scrolled past the cue zone.
+      if (atPageTopRef.current) cueIntroRef.current?.play();
+    }
   }, [initialLoading]);
 
   // Scroll-based parallax animations
@@ -703,9 +751,21 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
               </div>
             </div>
           ))}
-
-
         </div>
+      </div>
+
+      {/* Scroll cue pinned to the bottom of the viewport, sitting over the
+          first card as it peeks under the hero. Shown only while the section
+          is still a scroll hint (matches the down-arrow hover cursor); fades
+          out once you scroll in. */}
+      <div
+        ref={cueRef}
+        className="fixed inset-x-0 bottom-8 md:bottom-10 z-50 flex flex-col items-center gap-2.5 text-white pointer-events-none"
+      >
+        <span className="text-[0.7rem] uppercase tracking-[0.3em] text-white/70">
+          Scroll for projects
+        </span>
+        <ArrowDown className="animate-bounce text-white/80" size={20} strokeWidth={1.5} />
       </div>
 
       <div className="relative w-full py-32 flex items-center justify-center">
