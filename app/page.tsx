@@ -128,11 +128,11 @@ export default function Home() {
 
       <Header color={bgColor} />
       <div
-        className={`fixed inset-0 z-0 h-full transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-0 md:p-12 md:pb-0"
+        className={`fixed inset-0 z-0 h-full transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-0 lg:p-12 lg:pb-0"
           }`}
       >
         <div
-          className={`overflow-hidden h-full transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-none md:rounded-[44px] md:rounded-b-none overflow-hidden md:border-t md:border-white/20"
+          className={`overflow-hidden h-full transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-none lg:rounded-[44px] lg:rounded-b-none overflow-hidden lg:border-t lg:border-white/20"
             }`}
         >
           <Grainient color1="#000000" color2={bgColor} color3="#000000" />
