@@ -117,8 +117,8 @@ export default function HeroText() {
             shrinking the type — that is how the phone headline ended up
             smaller than the tagline under it. */}
         <WarpTextBlock
-          text="Building & Shipping Software"
-          stackedText={'Building & Shipping\nSoftware'}
+          text="Building Scalable Software"
+          stackedText={'Building Scalable\nSoftware'}
           height="clamp(1rem, 13vh, 9rem)"
           stackedHeight="clamp(5.5rem, 22vw, 16.7rem)"
           warpStrength={2.5}
@@ -138,7 +138,7 @@ export default function HeroText() {
             lowercase start and the missing period are deliberate: the thought
             closes on "end to end", not here. */}
         <p className="-mt-4 text-lg! sm:text-xl! text-white/50 [text-shadow:0_2px_16px_rgba(0,0,0,0.65)] font-mono">
-          That Actually Scalable, Functional and Maintainable from End to End
+          That Actually Clean, Functional and Maintainable from End to End
         </p>
 
         <div className="flex gap-4 mt-4">

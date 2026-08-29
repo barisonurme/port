@@ -26,6 +26,9 @@ const IDLE_FADE = 3;
 const DOTS_HIDE_AT = 10;
 const DOTS_SHOW_AT = 4;
 
+/** Once the page has moved this far, the full-bleed background sheds its inset + corners. */
+const FRAME_COLLAPSE_AT = 8;
+
 function hexToRgb(hex: string) {
   const n = parseInt(hex.slice(1), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
@@ -41,6 +44,7 @@ const initialColor = "#EA285E";
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);
   const [dotsMounted, setDotsMounted] = useState(true);
+  const [frameCollapsed, setFrameCollapsed] = useState(false);
   const colorRef = useRef(hexToRgb(initialColor));
   const idleRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -97,9 +101,11 @@ export default function Home() {
 
     const measure = () => {
       frame = 0;
+      const y = window.scrollY;
       setDotsMounted((mounted) =>
-        mounted ? window.scrollY < DOTS_HIDE_AT : window.scrollY < DOTS_SHOW_AT
+        mounted ? y < DOTS_HIDE_AT : y < DOTS_SHOW_AT
       );
+      setFrameCollapsed(y > FRAME_COLLAPSE_AT);
     };
 
     const onScroll = () => {
@@ -121,25 +127,41 @@ export default function Home() {
     <main className="relative">
 
       <Header color={bgColor} />
-      <div className="fixed inset-0 z-0">
-        <Grainient color1="#000000" color2={bgColor} color3="#000000" />
+      <div
+        className={`fixed inset-0 z-0 h-full transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-12 pb-0"
+          }`}
+      >
+        <div
+          className={`overflow-hidden h-full transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-[44px] rounded-b-none overflow-hidden  border-t border-white/20"
+            }`}
+        >
+          <Grainient color1="#000000" color2={bgColor} color3="#000000" />
+        </div>
       </div>
 
 
       {/* Interactive dot field sitting on top of the gradient, behind all content. */}
       {dotsMounted && (
-        <div className="fixed inset-0 opacity-50 pointer-events-none">
-          <DotGrid
-            dotSize={1}
-            gap={28}
-            baseColor={bgColor}
-            activeColor={bgColor}
-            proximity={140}
-            shockRadius={260}
-            shockStrength={4}
-            resistance={750}
-            returnDuration={1.4}
-          />
+        <div
+          className={`fixed inset-0 opacity-50 pointer-events-none transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-12"
+            }`}
+        >
+          <div
+            className={`overflow-hidden transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-xl"
+              }`}
+          >
+            <DotGrid
+              dotSize={1}
+              gap={28}
+              baseColor={bgColor}
+              activeColor={bgColor}
+              proximity={140}
+              shockRadius={260}
+              shockStrength={4}
+              resistance={750}
+              returnDuration={1.4}
+            />
+          </div>
         </div>
       )}
 

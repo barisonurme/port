@@ -24,6 +24,70 @@ const NAV_LINKS = [
     { href: '/contact', label: 'Contact', match: ['/contact'] },
 ]
 
+type NavLink = (typeof NAV_LINKS)[number]
+
+// Desktop nav item: on hover the label rolls up letter by letter while an
+// identical copy rolls in from below, staggered per character. The timeline is
+// built once, paused, then played / reversed on pointer enter / leave.
+const DesktopNavLink = ({
+    link,
+    active,
+    onNavigate,
+}: {
+    link: NavLink
+    active: boolean
+    onNavigate: () => void
+}) => {
+    const rootRef = useRef<HTMLButtonElement>(null)
+    const tlRef = useRef<gsap.core.Timeline | null>(null)
+    const chars = Array.from(link.label)
+
+    useEffect(() => {
+        const el = rootRef.current
+        if (!el) return
+        const top = el.querySelectorAll<HTMLElement>('[data-roll-top] > span')
+        const bottom = el.querySelectorAll<HTMLElement>('[data-roll-bottom] > span')
+        tlRef.current = gsap
+            .timeline({ paused: true })
+            .to(top, { yPercent: -100, duration: 0.4, ease: 'power3.out', stagger: 0.03 }, 0)
+            .to(bottom, { yPercent: -100, duration: 0.4, ease: 'power3.out', stagger: 0.03 }, 0)
+        return () => {
+            tlRef.current?.kill()
+            tlRef.current = null
+        }
+    }, [])
+
+    return (
+        <button
+            ref={rootRef}
+            type='button'
+            disabled={active}
+            aria-current={active ? 'page' : undefined}
+            onClick={active ? undefined : onNavigate}
+            onMouseEnter={() => tlRef.current?.play()}
+            onMouseLeave={() => tlRef.current?.reverse()}
+            className={`text-white text-lg font-bold transition-opacity duration-300 ${active ? 'opacity-100 cursor-default' : 'opacity-65 cursor-pointer hover:opacity-100'}`}
+        >
+            <span className='relative block overflow-hidden leading-[1.15]'>
+                <span data-roll-top className='block'>
+                    {chars.map((ch, i) => (
+                        <span key={i} className='inline-block whitespace-pre'>
+                            {ch}
+                        </span>
+                    ))}
+                </span>
+                <span data-roll-bottom aria-hidden className='absolute left-0 top-full block'>
+                    {chars.map((ch, i) => (
+                        <span key={i} className='inline-block whitespace-pre'>
+                            {ch}
+                        </span>
+                    ))}
+                </span>
+            </span>
+        </button>
+    )
+}
+
 const Header = ({ color = '#ffffff' }: { color?: string }) => {
     const [open, setOpen] = useState(false)
     const navigate = usePageTransition()
@@ -60,7 +124,14 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
     }, [initialLoading])
 
     return (
-        <div ref={rootRef} className='flex justify-center items-center w-full top-0 p-4 pt-6 sm:p-8 sm:pt-8 md:p-24 md:pt-10 z-5000 absolute'>
+        <div
+            ref={rootRef}
+            className={`flex justify-center items-center w-full top-0 p-4 sm:p-8 md:p-24 z-5000 absolute ${
+                pathname === '/'
+                    ? 'pt-12 sm:pt-16 md:pt-20'
+                    : 'pt-6 sm:pt-8 md:pt-10'
+            }`}
+        >
             <div className='border-l border-t flex flex-col w-full h-full max-w-7xl backdrop-blur-3xl bg-black/30 p-3 px-4 md:p-8 md:px-12 rounded-[16px] shadow-xl border-white/20'>
                 <div className='flex justify-between  items-center w-full h-full gap-2'>
                     <button
@@ -68,7 +139,7 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
                         disabled={pathname === '/'}
                         aria-current={pathname === '/' ? 'page' : undefined}
                         onClick={pathname === '/' ? undefined : () => navigate('/')}
-                        className={`flex justify-start items-center gap-2 shrink-0 ${pathname === '/' ? 'cursor-default' : 'cursor-pointer'}`}
+                        className={`flex justify-start items-center text-lg font-bold gap-2 shrink-0 ${pathname === '/' ? 'cursor-default' : 'cursor-pointer'}`}
                     >
                         <Logo color={color} />
                         BARISONURME
@@ -76,21 +147,14 @@ const Header = ({ color = '#ffffff' }: { color?: string }) => {
 
                     {/* Desktop nav */}
                     <nav className='hidden md:flex justify-end items-center gap-8'>
-                        {NAV_LINKS.map((link) => {
-                            const active = isActive(link)
-                            return (
-                                <button
-                                    key={link.href}
-                                    type='button'
-                                    disabled={active}
-                                    aria-current={active ? 'page' : undefined}
-                                    onClick={active ? undefined : () => navigate(link.href)}
-                                    className={`text-white text-lg font-bold transition-opacity duration-300 ${active ? 'opacity-100 cursor-default' : 'opacity-65 cursor-pointer hover:opacity-100'}`}
-                                >
-                                    {link.label}
-                                </button>
-                            )
-                        })}
+                        {NAV_LINKS.map((link) => (
+                            <DesktopNavLink
+                                key={link.href}
+                                link={link}
+                                active={isActive(link)}
+                                onNavigate={() => navigate(link.href)}
+                            />
+                        ))}
                     </nav>
 
                     {/* Hamburger toggle */}
