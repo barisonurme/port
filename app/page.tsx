@@ -128,11 +128,11 @@ export default function Home() {
 
       <Header color={bgColor} />
       <div
-        className={`fixed inset-0 z-0 h-full transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-12 pb-0"
+        className={`fixed inset-0 z-0 h-full transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-0 md:p-12 md:pb-0"
           }`}
       >
         <div
-          className={`overflow-hidden h-full transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-[44px] rounded-b-none overflow-hidden  border-t border-white/20"
+          className={`overflow-hidden h-full transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-none md:rounded-[44px] md:rounded-b-none overflow-hidden md:border-t md:border-white/20"
             }`}
         >
           <Grainient color1="#000000" color2={bgColor} color3="#000000" />
@@ -143,11 +143,11 @@ export default function Home() {
       {/* Interactive dot field sitting on top of the gradient, behind all content. */}
       {dotsMounted && (
         <div
-          className={`fixed inset-0 opacity-50 pointer-events-none transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-12"
+          className={`fixed inset-0 opacity-50 pointer-events-none transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-0 md:p-12"
             }`}
         >
           <div
-            className={`overflow-hidden transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-xl"
+            className={`overflow-hidden transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-none md:rounded-xl"
               }`}
           >
             <DotGrid

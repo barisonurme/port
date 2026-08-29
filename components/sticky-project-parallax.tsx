@@ -41,6 +41,11 @@ export type CARDS = {
 /** How far ahead of the card animation the active-index tracking runs, in viewport heights. */
 const ACTIVE_LEAD_VH = 0.75;
 
+/** Below this scrollY the first card is still just a scroll cue: a click scrolls
+ *  the section in instead of opening a project, the hover cursor points down,
+ *  and the pointer-driven 3D tilt stays off. */
+const SCROLL_CUE_MAX_Y = 250;
+
 export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeLead = ACTIVE_LEAD_VH }: { CARDS: CARDS; scroller?: { current: HTMLElement | null }; onActiveChange?: (index: number) => void; activeLead?: number }) {
   const navigate = usePageTransition();
   const initialLoading = useInitialLoading();
@@ -75,16 +80,12 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   // click there scrolls the section in rather than opening a project — and the
   // hover cursor points down instead of up-right to say so.
   const [atPageTop, setAtPageTop] = useState(true);
+  // Mirror of atPageTop for the callbacks that must not re-create on every
+  // scroll (applyTilt, openCard).
+  const atPageTopRef = useRef(true);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    const onScroll = () => setAtPageTop(window.scrollY < 250);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Track "is this a phone / touch device" for skipping the 3D tilt.
   useEffect(() => {
@@ -101,6 +102,9 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   // settles the card back to flat.
   const applyTilt = useCallback((i: number, nx: number, ny: number) => {
     if (isMobileRef.current) return;
+    // While the section is still a scroll cue, keep the cards perfectly flat —
+    // a zero (nx = ny = 0) call still runs so a mid-tilt card can settle.
+    if (atPageTopRef.current && (nx !== 0 || ny !== 0)) return;
     // Background frame — gentle tilt on a deep perspective; nothing clips it.
     const frame = frameRefs.current[i];
     if (frame) {
@@ -151,6 +155,24 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
       });
     }
   }, []);
+
+  // Track whether we're still in the "scroll cue" zone near the top of the page.
+  // Drives the down/up-right hover cursor, the click behavior and the 3D tilt.
+  useEffect(() => {
+    const onScroll = () => {
+      const atTop = window.scrollY < SCROLL_CUE_MAX_Y;
+      if (atTop === atPageTopRef.current) return;
+      atPageTopRef.current = atTop;
+      setAtPageTop(atTop);
+      // Leaving the cue zone: let the active card pick up the cursor. Entering
+      // it: settle whatever card was mid-tilt back to flat.
+      const { nx, ny } = pointerRef.current;
+      applyTilt(tiltIndexRef.current, atTop ? 0 : nx, atTop ? 0 : ny);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [applyTilt]);
 
   // Global pointer tracking: tilt the active card wherever the mouse is.
   useEffect(() => {
@@ -402,10 +424,10 @@ export function StickyProjectParallax({ CARDS, scroller, onActiveChange, activeL
   }, [scroller, activeLead]);
 
   const openCard = useCallback((index: number) => {
-    // From the top of the home page, the card is just a scroll cue — send the
+    // While the card is still a scroll cue (down arrow showing), send the
     // section to the top of the viewport (pins it, card 0 centered) instead of
     // opening. Uses the same Lenis bridge as the hero buttons.
-    if (window.scrollY < 10) {
+    if (window.scrollY < SCROLL_CUE_MAX_Y) {
       const container = containerRef.current;
       if (container) {
         const top = container.getBoundingClientRect().top + document.documentElement.scrollTop;
