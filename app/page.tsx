@@ -8,7 +8,6 @@ import { ContactSection } from "@/components/ContactSection";
 import { StickyProjectParallax } from "@/components/sticky-project-parallax";
 import { projects } from "@/lib/projects-data";
 import Grainient from "@/components/Grainient";
-import DotGrid from "@/components/DotGrid";
 import Header from "@/components/header";
 import { IDLE_PALETTE } from "@/lib/palette";
 
@@ -43,7 +42,6 @@ const initialColor = "#EA285E";
 
 export default function Home() {
   const [bgColor, setBgColor] = useState(initialColor);
-  const [dotsMounted, setDotsMounted] = useState(true);
   const [frameCollapsed, setFrameCollapsed] = useState(false);
   const colorRef = useRef(hexToRgb(initialColor));
   const idleRef = useRef<gsap.core.Timeline | null>(null);
@@ -102,9 +100,6 @@ export default function Home() {
     const measure = () => {
       frame = 0;
       const y = window.scrollY;
-      setDotsMounted((mounted) =>
-        mounted ? y < DOTS_HIDE_AT : y < DOTS_SHOW_AT
-      );
       setFrameCollapsed(y > FRAME_COLLAPSE_AT);
     };
 
@@ -138,32 +133,6 @@ export default function Home() {
           <Grainient color1="#000000" color2={bgColor} color3="#000000" />
         </div>
       </div>
-
-
-      {/* Interactive dot field sitting on top of the gradient, behind all content. */}
-      {dotsMounted && (
-        <div
-          className={`fixed inset-0 opacity-50 pointer-events-none transition-[padding] duration-700 ease-out ${frameCollapsed ? "p-0" : "p-0 md:p-12"
-            }`}
-        >
-          <div
-            className={`overflow-hidden transition-[border-radius] duration-700 ease-out ${frameCollapsed ? "rounded-none" : "rounded-none md:rounded-xl"
-              }`}
-          >
-            <DotGrid
-              dotSize={1}
-              gap={28}
-              baseColor={bgColor}
-              activeColor={bgColor}
-              proximity={140}
-              shockRadius={260}
-              shockStrength={4}
-              resistance={750}
-              returnDuration={1.4}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Hero is intentionally short of a full viewport so the first
           StickyProjectParallax card peeks in at the bottom (~20%) as the
